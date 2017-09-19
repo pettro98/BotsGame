@@ -1,5 +1,5 @@
 # Game
 ***
-You can read the game description and rules and try it [here](http://www.hexagongame.org/).
+You can read the game description and rules. You can try the game [here](http://www.hexagongame.org/).
 
-Note: the game requires Flash player installed.
+Note: the game requires Flash player.
