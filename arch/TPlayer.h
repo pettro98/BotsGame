@@ -19,7 +19,8 @@ namespace game_module
 		size_type index; // индекс игрока
 		std::string name; // имя игрока
 		bool moved; // показывает, ходил ли игрок в этом туре
-		typedef void(*turn_function)(); // функция хода игрока
+		void(*turn_function)(const TPlayer & player); // функция хода игрока
+		std::map<size_type, TCapital> capitals;
 		TGame * game;
 
 	public:
@@ -40,6 +41,17 @@ namespace game_module
 		//
 
 
+		// получение полей класса
+		size_type get_index() const;
+		std::string get_name() const;
+		bool get_moved() const;
+		TCapital get_capital(size_type capital_index) const;
+		std::map<size_type, TCapital> get_capitals() const;
+		size_type get_max_turns() const; // возвращает максимальное кол-во ходов в данной игре
+		size_type get_current_turn() const; // возвращает номер текущего хода
+		//
+
+
 	private:
 
 		void make_a_turn(); // функция вызова turn_function - функции хода игрока, проверяет moved
@@ -47,19 +59,16 @@ namespace game_module
 
 		// меняем поля класса
 		void change_moved();
-		//
-
+		bool remove_capital(TCapital * capital);
+		bool remove_capital(size_type capital_index);
+		bool add_capital(TCapital * capital);
+		bool add_capital(size_type capital_index);
 		void change_game(TGame * game_pointer); // меняем указатель на игру при создании новой
+		//
 
 	public:
 
 		// API
-
-		// получение полей класса
-		size_type get_index() const;
-		std::string get_name() const;
-		bool get_moved() const;
-		//
 
 		bool can_make_move(size_type scoord_1, size_type scoord_2, size_type ecoord_1, size_type ecoord_2) const; //
 		bool can_make_move(size_type scoord_1, size_type scoord_2, pair end) const; //
@@ -75,6 +84,8 @@ namespace game_module
 		bool make_move(alpha_type alpha); // нужна ли?
 		// совершает ход, если он возможен, возвращает true, в случае успеха
 
+
+		// функции с альфами и соседями вероятно бесполезны
 		alpha_type get_player_alpha(size_type player_index) const; //возвращает последнюю альфу игрока с индексом player_index
 		std::vector<alpha_type> get_player_alpha(size_type player_index, size_type turns_num) const; //
 		// возвращает последние turns_num альф игрока с индексом player_index
@@ -83,6 +94,7 @@ namespace game_module
 		alpha_type get_alpha(size_type turn) const; // возвращает альфу хода под номером turn
 		//если этого хода ещё не было возвращает что-то типа ((0,0)(0,0))?
 
+
 		size_type neighbors_number(size_type coord_1, size_type coord_2) const; //
 		size_type neighbors_number(pair hex) const; //
 		//возвращает кол-во соседей гекса с индексом не игрока
@@ -90,6 +102,9 @@ namespace game_module
 		std::vector<pair> get_hex_neighbors(size_type coord_1, size_type coord_2) const; //
 		std::vector<pair> get_hex_neighbors(pair hex) const; //
 		// возвращает координаты соседей гекса
+		//
+
+		
 
 		size_type get_hex_index(size_type coord_1, size_type coord_2) const; //
 		size_type get_hex_index(pair) const; //
@@ -102,9 +117,7 @@ namespace game_module
 		std::vector<size_type> get_players_indexes() const; 
 		// возвращает индексы всех игроков в игре
 
-		size_type get_max_turns() const; // возвращает максимальное кол-во ходов в данной игре
-		size_type get_current_turn() const; // возвращает номер текущего хода
-
+		
 		//
 
 
