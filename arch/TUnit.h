@@ -1,17 +1,8 @@
 
 
-
-
-
-
-
-
-
 namespace game_module
 {
 
-	using size_type = short;
-	using pair = std::pair<size_type, size_type>;
 
 	class TUnit
 	{
@@ -36,6 +27,7 @@ namespace game_module
 		// функция строгого сравнения сил двух юнитов
 		bool battle(THex * phex) const; // возращает true если на клетке никого нет
 		bool battle(const THex & phex) const; 
+		bool battle(pair hex_coord) const;
 		bool battle(TUnit * unit) const;
 		bool battle(const TUnit & unit) const;
 		bool battle(size_type strng) const;
@@ -44,10 +36,11 @@ namespace game_module
 	private:
 
 		void change_hex(THex * phex); // удаляет также юнита в гексе назначения, ибо нефиг
+		// удаление юнита реализованно через гекс
+
+		friend class TGame;
 
 	};
-
-
 
 
 
@@ -62,7 +55,7 @@ namespace game_module
 	public:
 
 		~TActiveUnit();
-		TActiveUnit(THex * phex);
+		TActiveUnit(THex * phex, size_type strng);
 		size_type get_strength() const;
 
 	};
@@ -81,21 +74,21 @@ namespace game_module
 	private:
 
 		void change_strength(size_type strng);
+		size_type operator ++(); // ++strength, если возможно
 		void die(); // создает могилу на гексе, применяется при нехватке снабжения
+
+		friend class TGame;
+		friend class THex;
 
 	};
 
 
-	class TTower
+	struct TTower
 		: public TActiveUnit
 	{
 		~TTower();
-		TTower(THex * phex);
+		TTower(THex * phex, size_type strng);
 		static size_type get_type();
-
-	private:
-
-		void change_strength(size_type strng);
 
 	};
 
@@ -119,11 +112,12 @@ namespace game_module
 
 	private:
 
-		void change_district_index(size_type);
-		void change_district_money(size_type);
+		void change_district_index(size_type rhs);
+		void change_district_money(size_type rhs); //прибавляет rhs, но нужна защита от переполнения
+
+		friend class TGame;
 
 	};
-
 
 
 
@@ -162,7 +156,10 @@ namespace game_module
 
 	private:
 
-		void has_doubled(); //?
+		void has_doubled(); // обнуляет turns_from_double
+		void operator ++(); // ++turns_from_double
+
+		friend class TGame;
 
 	};
 
@@ -173,7 +170,7 @@ namespace game_module
 
 		~TPalm();
 		TPalm(THex * phex);
-		static size_type turns_to_double();
+		static size_type turns_to_double(); // возвращает срок за который размножается данный тип
 		static size_type get_type();
 
 	};
@@ -185,7 +182,7 @@ namespace game_module
 
 		~TPine();
 		TPine(THex * phex);
-		static size_type turns_to_double();
+		static size_type turns_to_double(); // возвращает срок за который размножается данный тип
 		static size_type get_type();
 
 	};
