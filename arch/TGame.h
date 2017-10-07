@@ -1,36 +1,32 @@
 #include <map>
 
 
-
-
-// класс крайне сырой, нужно добавить кучу методов для обеспечения работы API функций из TPlayer
-// определиться с результатами игры:
-// 1) какие результаты на интересуют?
-// 2) какие разбаловки?
-// 3) функции для их возврата
-// реализация метода bool make_players() под вопросом
-
-
 namespace game_module 
 {
 
-	class TGame {
+	using size_type = short;
+	using pair = std::pair<size_type, size_type>;
+	using delta_type = std::pair<pair, pair>;
 
-		using size_type = short;
+
+	struct Results { }; // структура результатов игры
+
+
+	class TGame {
 
 		std::map<size_type, TPlayer> * players; // игроки, учавствующие в игре и их индексы
 		TMap * map; // указатель на карту
 		size_type current_turn; // текущий ход
 		size_type max_turns; // количество ходов, через которое игра прекратится автоматически
+		Results result; // результаты соревнования, обновляются по ходу игры
 
 	public:
 
 		~TGame();
 		TGame(size_type max_trs, size_type map_dimension, size_type map_type,
 			std::map<size_type, TPlayer> * plrs = nullptr);
-		// при создании игры она сразу же и начинается
 
-		// базовые конструкторы, операторы // все ли нужны?
+		// базовые конструкторы, операторы 
 		TGame();
 		TGame(TGame && game);
 		TGame & operator = (TGame && game);
@@ -43,14 +39,26 @@ namespace game_module
 		size_type get_max_turns() const;
 		//
 
+		Results start_game(); // проводит игру
+		bool check_end_game(); // проверяет не закончилась ли игра
+
+
 	private:
 
-		// вспомогательные методы
+		
+		// вспомогательные методы API
+
+		bool make_move(pair start, pair end); 
+		bool buy_army(pair hex);
+		bool buy_tower(pair hex, size_type strength);
+		bool buy_farm(pair hex);
+
+		//
 
 		bool make_players(); // создает объекты TPlayer в случае если игроков не передали в конструктор
 		// вызывается в кострукторе
 
-		void remove_player(size_type player_index); // исключает игрока из игры
+		void remove_player(size_type player_index); // исключает игрока из игры 
 
 		// 
 
