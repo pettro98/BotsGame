@@ -1,37 +1,31 @@
 
 
-
-
-
-
 namespace game_module
 {
 
-	using size_type = short;
-	using pair = std::pair<size_type, size_type>;
 
 	class TMap
 	{ 
 
 		THex ** root; // указатель на двумерный массив гексов
-		size_type dimension;
-		std::string map_type;
+		size_type dimension; // размерность карты
+		std::string map_type; // тип карты
 
 	public:
 
-		~TMap();
-		TMap(size_type dimension, size_type player_number, const std::string & map_type);
+		~TMap(); // вызывает метод clear
+		TMap(size_type dimension,
+			size_type player_number,
+			const std::string & map_type);
 		TMap(const TMap & map);
 		TMap & operator = (const TMap & map);
 
 		// базовые конструкторы, операторы
 		TMap() = delete;
-		TMap(TMap && map);
-		TMap & operator = (TMap && map);
+		TMap(TMap && map) = delete ;
+		TMap & operator = (TMap && map) = delete;
 		//
 
-		size_type get_index(const pair & coord) const; // выдаёт индекс гекса
-		size_type get_index(size_type coord_1, size_type coord_2) const;
 		size_type get_dimension() const;
 		size_type get_map_type() const;
 
@@ -41,9 +35,13 @@ namespace game_module
 		THex & operator () (size_type coord_1, size_type coord_2); // выдаёт гекс
 
 		void generate_map( // вспомогательный метод, генерирующий карту, вызывается в конструкторе
-			size_type dimension = 10, size_type player_number = 2,  // dimension - размерность карты,
-			const std::string & map_type = "classic" // player_number - число игроков, map_typr - тип карты
+			size_type dimension = 10, size_type player_number = 2,  
+			const std::string & map_type = "classic"
 		); 
+
+		void clear(); // очищает карту, в том числе удаляет всех юнитов на ней
+
+		friend class TGame;
 
 	};
 
@@ -71,20 +69,19 @@ namespace game_module
 		// получение полей класса
 		pair get_coordinates() const;
 		size_type get_index() const;
-		size_type get_capital_district_index() const;
-		size_type get_capital_district_money() const;
 		//
 
-		bool occupied() const; // наличие юнита на гексе
+		bool occupied() const; // наличие юнита в гексе
 
 	private:
 
-		// изменение полей класса (координаты не меняются, они определяются при создании обьекта)
+		// изменение полей класса 
 		void change_index(size_type new_index);
-		void change_unit(TUnit * unit); // помещает нового юнита в гекс, старого удаляет
+		void change_capital(TCapital * new_capital); // заменяет указатель capital
 		bool create_unit(TUnit * unit); // помещает нового юнита в гекс если он не занят
-		void remove_unit(); // разыменовывает указатель
-		void delete_unit(); // вызывает delete для указателя
+		void remove_unit(); // разыменовывает указатель unit
+		void delete_unit(); // вызывает delete для указателя unit и разыменовывает его
+		void change_unit(TUnit * unit); // помещает нового юнита в гекс, старого удаляет
 		//
 
 		// получение полей класса
@@ -92,8 +89,9 @@ namespace game_module
 		TCapital * get_capital();
 		//
 
-
 		friend class TMap;
+		friend class TGame;
+
 	};
 
 }
