@@ -24,15 +24,6 @@ namespace game_module
 		virtual size_type type() = 0; // возвращает тип юнита
 		//
 
-		// функция строгого сравнения сил двух юнитов
-		bool battle(THex * hex) const; // возращает true если на клетке никого нет
-		bool battle(const THex & hex) const; 
-		bool battle(pair hex_coord) const;
-		bool battle(TUnit * unit) const;
-		bool battle(const TUnit & unit) const;
-		bool battle(size_type strng) const;
-		//
-
 		bool operator == (const TUnit & unit) const;
 		bool operator == (const THex & hex) const;
 
@@ -49,6 +40,15 @@ namespace game_module
 	bool operator != (const TUnit & unit1, const TUnit & unit2);
 	bool operator != (const TUnit & unit1, const THex & unit2);
 	bool operator != (const THex & unit1, const TUnit & unit2);
+
+	// функция строгого сравнения сил двух юнитов
+	// возращает true если на клетке никого нет
+	bool battle(const TUnit & unit1, const TUnit & unit2);
+	bool battle(const TUnit & unit, size_type strng);
+	bool battle(size_type strng, const TUnit & unit );
+	//
+
+
 
 
 	class TActiveUnit
