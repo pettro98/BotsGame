@@ -97,5 +97,6 @@ namespace game_module
 	};
 
 	bool operator != (const THex & hex1, const THex & hex2);
+	size_type distance(const THex & hex1, const THex & hex2);
 
 }
