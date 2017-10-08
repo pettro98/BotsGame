@@ -7,9 +7,9 @@ namespace game_module
 	class TMap
 	{ 
 
-		THex ** root; // указатель на двумерный массив гексов
-		size_type dimension; // размерность карты
-		std::string map_type; // тип карты
+		THex ** Root; // указатель на двумерный массив гексов
+		size_type Dimension; // размерность карты
+		std::string Map_type; // тип карты
 
 	public:
 
@@ -26,8 +26,8 @@ namespace game_module
 		TMap & operator = (TMap && map) = delete;
 		//
 
-		size_type get_dimension() const;
-		size_type get_map_type() const;
+		size_type dimension() const;
+		size_type map_type() const;
 
 	private:
 
@@ -51,10 +51,10 @@ namespace game_module
 	class THex
 	{
 
-		pair coordinates; // координаты гекса
-		size_type index; // индекс владельца
-		TUnit * unit; // указатель на юнит в гексе 
-		TCapital * capital; // указатель на столицу области
+		pair Coordinates; // координаты гекса
+		size_type Index; // индекс владельца
+		TUnit * Unit; // указатель на юнит в гексе 
+		TCapital * Capital; // указатель на столицу области
 
 
 	public:
@@ -63,15 +63,17 @@ namespace game_module
 		~THex();
 		THex(THex * phex);
 		THex(size_type coord_1 ,size_type coord_2);
-		THex & operator = (const THex & phex);
+		THex & operator = (const THex & hex);
 	
 
 		// получение полей класса
-		pair get_coordinates() const;
-		size_type get_index() const;
+		pair coordinates() const;
+		size_type index() const;
 		//
 
 		bool occupied() const; // наличие юнита в гексе
+
+		bool operator == (const THex & hex) const;
 
 	private:
 
@@ -93,5 +95,7 @@ namespace game_module
 		friend class TGame;
 
 	};
+
+	bool operator != (const THex & hex1, const THex & hex2);
 
 }
