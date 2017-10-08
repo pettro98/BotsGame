@@ -1,21 +1,23 @@
 #include <vector>
-
+#include <list>
 
 namespace game_module
 {
 
 	class TPlayer {
 
-		size_type index; // индекс игрока
-		std::string name; // имя игрока
-		void(*turn_function)(const TPlayer & player); // функция хода игрока
+		size_type Index; // индекс игрока
+		std::string Name; // имя игрока
+		void(*Turn_function)(const TPlayer & player); // функция хода игрока
 
-		bool moved; // показывает, ходил ли игрок в этом туре
-		bool in_game; // показывает в игре ли участник
+		bool Moved; // показывает, ходил ли игрок в этом туре
+		bool In_game; // показывает в игре ли участник
 
-		std::map<size_type, TCapital> capitals; // столицы игрока
+		std::list<THex> * Armies; // армии игрока, вектор собирается заново в начале хода
+		// при передвижении юнита он убирается из списка
+		std::map<size_type, TCapital> Capitals; // столицы игрока
 
-		TGame * game; // указатель на текущую игру
+		TGame * Game; // указатель на текущую игру
 
 	public:
 
@@ -36,15 +38,17 @@ namespace game_module
 
 		// получение полей класса
 
-		size_type get_index() const;
-		std::string get_name() const;
+		size_type index() const;
+		std::string name() const;
 
-		bool get_moved() const;
-		bool get_in_game() const;
+		bool moved() const;
+		bool in_game() const;
 
 		//
 
 		bool check_in_game() const; // проверяет наличие столиц и делает вывод в игре ли участник
+
+		bool operator == (const TPlayer & player) const;
 
 	private:
 
@@ -54,9 +58,14 @@ namespace game_module
 		void change_moved();
 		void change_in_game();
 
+		void build_army_list(); // в начале хода добаляет всех юнитов игрока в лист
+		void add_army(THex * army_hex);
+		bool remove_army(THex * army_hex);
+		bool remove_army(pair army_hex);
+
+		void add_capital(TCapital * capital);
 		bool remove_capital(TCapital * capital);
 		bool remove_capital(size_type capital_index);
-		bool add_capital(TCapital * capital);
 
 		void change_game(TGame * game_pointer); // меняем указатель на игру при создании новой
 		//
@@ -68,10 +77,10 @@ namespace game_module
 
 		// API
 
-		// инфо, я хз
+		// инфо
 
-		size_type get_max_turns() const; 
-		size_type get_current_turn() const; 
+		size_type max_turns() const; 
+		size_type current_turn() const; 
 
 		bool can_make_move(size_type scoord_1, size_type scoord_2,
 			size_type ecoord_1, size_type ecoord_2) const; //
@@ -86,15 +95,16 @@ namespace game_module
 		size_type get_hex_strength() const;
 		// получение полей гекса с координатами hex_coord
 
-		static std::vector<pair> get_hex_neighbors(size_type coord_1, size_type coord_2); //
 		static std::vector<pair> get_hex_neighbors(pair hex); //
 		// возвращает координаты соседей гекса
 	
-		size_type get_hex_index(size_type coord_1, size_type coord_2) const; //
-		size_type get_hex_index(pair) const; //
+		size_type hex_index(size_type coord_1, size_type coord_2) const; //
+		size_type hex_index(pair) const; //
 		//возвращает индекс владельца гекса
 
-		std::vector<pair> get_farms(); 
+		std::list<THex> army_list() const;
+
+		std::vector<pair> get_farms() const; 
 		// координаты всех гексов с фермами данного игрока
 
 		std::vector<pair> get_player_hexs(size_type player_index) const;
@@ -132,5 +142,9 @@ namespace game_module
 		friend class TGame;
 
 	};
+
+
+	bool operator != (const TPlayer & player1, const TPlayer & player2);
+
 
 }
