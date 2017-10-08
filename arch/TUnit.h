@@ -9,39 +9,46 @@ namespace game_module
 
 	protected:
 
-		THex * hex; // гекс на котором юнит находится, юнит принадлежит владельцу гекса
+		THex * Hex; // гекс на котором юнит находится, юнит принадлежит владельцу гекса
 
 	public:
 
 		virtual ~TUnit();
-		TUnit(THex * phex); // основной конструктор
+		TUnit(THex * hex); // основной конструктор
 
 		// получение информации о юните
-		pair get_coordinates() const;
-		size_type get_index() const;
+		pair coordinates() const;
+		size_type index() const;
 		
-		virtual size_type get_strength() = 0; 
-		virtual size_type get_type() = 0; // возвращает тип юнита
+		virtual size_type strength() = 0; 
+		virtual size_type type() = 0; // возвращает тип юнита
 		//
 
 		// функция строгого сравнения сил двух юнитов
-		bool battle(THex * phex) const; // возращает true если на клетке никого нет
-		bool battle(const THex & phex) const; 
+		bool battle(THex * hex) const; // возращает true если на клетке никого нет
+		bool battle(const THex & hex) const; 
 		bool battle(pair hex_coord) const;
 		bool battle(TUnit * unit) const;
 		bool battle(const TUnit & unit) const;
 		bool battle(size_type strng) const;
 		//
 
+		bool operator == (const TUnit & unit) const;
+		bool operator == (const THex & hex) const;
+
 	private:
 
-		void change_hex(THex * phex); // удаляет также юнита в гексе назначения, ибо нефиг
+		void change_hex(THex * hex); // удаляет также юнита в гексе назначения, ибо нефиг
 		// удаление юнита реализованно через гекс
 
 		friend class TGame;
 
 	};
 
+
+	bool operator != (const TUnit & unit1, const TUnit & unit2);
+	bool operator != (const TUnit & unit1, const THex & unit2);
+	bool operator != (const THex & unit1, const TUnit & unit2);
 
 
 	class TActiveUnit
@@ -50,13 +57,13 @@ namespace game_module
 
 	protected:
 
-		size_type strength;
+		size_type Strength;
 
 	public:
 
 		~TActiveUnit();
-		TActiveUnit(THex * phex, size_type strng);
-		size_type get_strength() const;
+		TActiveUnit(THex * hex, size_type strng);
+		size_type strength() const;
 
 	};
 
@@ -66,10 +73,10 @@ namespace game_module
 	{
 		
 		~TArmy();
-		TArmy(THex * phex, size_type strng);
-		static size_type get_type();
-		static size_type get_move_points();
-		size_type get_payment() const;
+		TArmy(THex * hex, size_type strng);
+		static size_type type();
+		static size_type move_points();
+		size_type payment() const;
 
 	private:
 
@@ -87,8 +94,8 @@ namespace game_module
 		: public TActiveUnit
 	{
 		~TTower();
-		TTower(THex * phex, size_type strng);
-		static size_type get_type();
+		TTower(THex * hex, size_type strng);
+		static size_type type();
 
 	};
 
@@ -97,18 +104,18 @@ namespace game_module
 		: public TActiveUnit
 	{
 
-		size_type district_index;
-		size_type district_money;
+		size_type District_index;
+		size_type District_money;
 
 	public:
 
 		~TCapital();
-		TCapital(THex * phex);
+		TCapital(THex * hex);
 		TCapital(TCapital * capital);
 
-		static size_type get_type();
-		size_type get_district_index() const;
-		size_type get_district_money() const;
+		static size_type type();
+		size_type district_index() const;
+		size_type district_money() const;
 
 	private:
 
@@ -125,8 +132,8 @@ namespace game_module
 		:public TUnit
 	{
 		~TPassiveUnit();
-		TPassiveUnit(THex * phex);
-		static size_type get_strength(); // возвращает 0
+		TPassiveUnit(THex * hex);
+		static size_type strength(); // возвращает 0
 	};
 
 
@@ -134,9 +141,9 @@ namespace game_module
 		: public TPassiveUnit
 	{
 		~TFarm();
-		TFarm(THex * phex);
-		static size_type get_type();
-		static size_type get_income();
+		TFarm(THex * hex);
+		static size_type type();
+		static size_type income();
 	};
 
 
@@ -146,12 +153,12 @@ namespace game_module
 	
 	protected:
 
-		size_type turns_from_double;
+		size_type Turns_from_double;
 
 	public:
 
 		~TTree();
-		TTree(THex * phex);
+		TTree(THex * hex);
 		bool ready_to_double() const;
 
 	private:
@@ -169,9 +176,9 @@ namespace game_module
 	{
 
 		~TPalm();
-		TPalm(THex * phex);
+		TPalm(THex * hex);
 		static size_type turns_to_double(); // возвращает срок за который размножается данный тип
-		static size_type get_type();
+		static size_type type();
 
 	};
 
@@ -181,9 +188,9 @@ namespace game_module
 	{
 
 		~TPine();
-		TPine(THex * phex);
+		TPine(THex * hex);
 		static size_type turns_to_double(); // возвращает срок за который размножается данный тип
-		static size_type get_type();
+		static size_type type();
 
 	};
 
@@ -192,10 +199,10 @@ namespace game_module
 		: public TPassiveUnit
 	{
 		~Grave();
-		Grave(THex * phex);
-		static size_type get_type();
+		Grave(THex * hex);
+		static size_type type();
 
 	};
 
-
+	
 }
