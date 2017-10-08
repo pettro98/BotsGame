@@ -14,11 +14,11 @@ namespace game_module
 
 	class TGame {
 
-		std::map<size_type, TPlayer> * players; // игроки, учавствующие в игре и их индексы
-		TMap * map; // указатель на карту
-		size_type current_turn; // текущий ход
-		size_type max_turns; // количество ходов, через которое игра прекратится автоматически
-		Results result; // результаты соревнования, обновляются по ходу игры
+		std::vector<TPlayer> * Players; // игроки, учавствующие в игре и их индексы
+		TMap * Map; // указатель на карту
+		size_type Current_turn; // текущий ход
+		size_type Max_turns; // количество ходов, через которое игра прекратится автоматически
+		Results Result; // результаты соревнования, обновляются по ходу игры
 
 	public:
 
@@ -35,8 +35,8 @@ namespace game_module
 		//
 
 		// получение полей класса 
-		size_type get_current_turn() const;
-		size_type get_max_turns() const;
+		size_type current_turn() const;
+		size_type max_turns() const;
 		//
 
 		Results start_game(); // проводит игру
