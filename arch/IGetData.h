@@ -1,6 +1,4 @@
-
-
-
+#pragma once
 
 
 namespace game_module
@@ -8,9 +6,7 @@ namespace game_module
 
 	class IGetData
 	{
-
 	public:
-
 		virtual Hex * get_hex(pair hex) = 0;
 		virtual Hex * get_hex(size_type coord1, size_type coord2) = 0;
 		virtual Hex * operator () (pair hex) = 0;
@@ -22,7 +18,6 @@ namespace game_module
 		virtual size_type current_turn() const = 0;
 		virtual size_type max_turns() const = 0;
 		virtual bool player_in_game(size_type player_index) const = 0;
-
 	};
 
 }
