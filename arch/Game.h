@@ -1,4 +1,10 @@
+#pragma once
 
+#include "General.h"
+#include "Map.h"
+#include "Player.h"
+#include "Hex.h"
+#include "Unit.h"
 
 
 namespace game_module 
@@ -7,9 +13,7 @@ namespace game_module
 	class Game 
 		: public IFullAccess
 	{
-
 	private:
-
 		std::vector<Player> Players; // игроки, учавствующие в игре и их индексы
 		Map * GameMap; // указатель на карту
 		size_type CurrentTurn; // текущий ход
@@ -17,7 +21,6 @@ namespace game_module
 		Result * Results; // результаты соревнования, обновляются по ходу игры
 
 	public:
-
 		~Game();
 		Game(size_type max_trs, size_type map_dimension, std::string map_type,
 			std::map<size_type, Player> * players = nullptr);
@@ -40,7 +43,6 @@ namespace game_module
 		// IFullAccess
 
 		//IGetData
-
 		Hex * get_hex(pair hex);
 		Hex * get_hex(size_type coord1, size_type coord2);
 		Hex * operator () (pair hex);
@@ -52,11 +54,9 @@ namespace game_module
 		size_type current_turn() const;
 		size_type max_turns() const;
 		bool player_in_game(size_type player_index) const;
-
 		//
 
 		// ISetData
-
 		void set_unit(pair hex, Unit * unit);
 		void set_color(pair hex, size_t  index);
 		void turn_passed();
@@ -67,16 +67,13 @@ namespace game_module
 		void add_to_built_farms(size_type players_index);
 		void add_to_built_towers(size_type players_index, size_type str = 1);
 		void add_to_moves(size_type players_index);
-
 		//
 
 		//
 
 	private:
-
 		bool make_players(); // создает объекты TPlayer в случае если игроков не передали в конструктор
 		// вызывается в кострукторе
-
 	};
 
 }
