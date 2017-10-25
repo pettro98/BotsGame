@@ -1,5 +1,7 @@
+#pragma once
 
-
+#include "IGetData.h"
+#include "ISetData.h"
 
 
 namespace game_module
