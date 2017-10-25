@@ -1,4 +1,5 @@
-
+#include "General.h"
+#include "Hex.h"
 
 namespace game_module
 {
