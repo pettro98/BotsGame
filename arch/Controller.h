@@ -1,4 +1,8 @@
+#pragma once
 
+#include "General.h"
+#include "Hex.h"
+#include "IFullAccess.h"
 
 
 namespace game_module
@@ -6,13 +10,10 @@ namespace game_module
 
 	class Controller
 	{
-
 	private:
-
 		IFullAccess * MyAccess;
 
 	public:
-
 		size_type get_index(pair hex) const;
 		size_type distance(pair hex1, pair hex2) const;
 		bool can_move(const Hex & hex1, const Hex & hex2) const;
@@ -50,10 +51,6 @@ namespace game_module
 		size_type get_army_cost(size_type strength = 1) const;
 		size_type get_tower_cost(size_type strength = 1) const;
 		std::vector<pair> get_army_list() const;
-
-	private:
-
 	};
-
 
 }

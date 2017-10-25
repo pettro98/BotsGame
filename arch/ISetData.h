@@ -1,5 +1,7 @@
 #pragma once
 
+#include "General.h"
+
 
 namespace game_module
 {

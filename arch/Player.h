@@ -1,12 +1,16 @@
-#include <vector>
-#include <list>
-#include <map>
+#pragma once
+
+#include "General.h"
+#include "Controller.h"
+#include "Unit.h"
+
 
 namespace game_module
 {
 
-	class Player {
-
+	class Player 
+	{
+	private:
 		size_type Index; // индекс игрока
 		std::string Name; // имя игрока
 
@@ -15,7 +19,6 @@ namespace game_module
 		Controller * GameController;
 
 	public:
-
 		// базовые конструкторы, операторы 
 		Player() = delete;
 		Player(Player &&);
@@ -32,10 +35,8 @@ namespace game_module
 
 
 		// получение полей класса
-
 		size_type index() const;
 		std::string name() const;
-
 		//
 
 		pair get_capital(size_type capital_index) const;
@@ -47,12 +48,10 @@ namespace game_module
 		virtual void turn() = 0;
 
 	private:
-
 		void add_capital(Capital * capital);
 		bool remove_capital(size_type capital_index);
 
 		friend class Game;
-
 	};
 
 	bool operator != (const Player & player1, const Player & player2);

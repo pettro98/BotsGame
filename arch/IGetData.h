@@ -1,5 +1,11 @@
 #pragma once
 
+#include "General.h"
+#include "Hex.h"
+#include "Map.h"
+#include "Unit.h"
+#include "Player.h"
+
 
 namespace game_module
 {
