@@ -1,4 +1,4 @@
-
+#pragma once
 
 
 namespace game_module
@@ -6,16 +6,22 @@ namespace game_module
 
 	using size_type = short;
 	using pair = std::pair<size_type, size_type>;
-	enum unit_type {
-		none = 0, army, tower, capital,
-		farm, palm, pine, grave
+	
+	enum unit_type 
+	{
+		none = 0, 
+		army,
+		tower,
+		capital,
+		farm,
+		palm,
+		pine,
+		grave
 	};
 
-	class Result // структура результатов игры
+	struct Result // структура результатов игры
 	{
-
 	public:
-
 		size_type winner; // победитель игры, по умолчанию 0
 		std::vector<size_type> points; // очки каждого игрока
 		std::vector<size_type> last_turn; // ход выхода из игры каждого игрока
@@ -27,7 +33,6 @@ namespace game_module
 											 // построенных каждым игроком за время партии
 		std::vector<size_type> moves; // кол - во перемещений 
 									  // юнитов каждого игрока за время партии
-
 	};
 
 }
