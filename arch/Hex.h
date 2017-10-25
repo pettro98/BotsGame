@@ -1,3 +1,5 @@
+#pragma once
+
 #include "General.h"
 #include "Unit.h"
 
