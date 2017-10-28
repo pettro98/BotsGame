@@ -8,7 +8,7 @@
 namespace game_module
 {
 
-	class Player 
+	class Player
 	{
 	private:
 		size_type Index; // индекс игрока
@@ -30,7 +30,7 @@ namespace game_module
 		// основные деструктор, конструктор
 		virtual ~Player();
 		Player(const size_type & pl_index, const std::string pl_name,
-			Controller * game_controller);
+			   Controller * game_controller);
 		//
 
 

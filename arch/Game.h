@@ -7,10 +7,10 @@
 #include "Unit.h"
 
 
-namespace game_module 
+namespace game_module
 {
 
-	class Game 
+	class Game
 		: public IFullAccess
 	{
 	private:
@@ -23,7 +23,7 @@ namespace game_module
 	public:
 		~Game();
 		Game(size_type max_trs, size_type map_dimension, std::string map_type,
-			std::map<size_type, Player> * players = nullptr);
+			 std::map<size_type, Player> * players = nullptr);
 
 		// базовые конструкторы, операторы 
 		Game();
