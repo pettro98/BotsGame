@@ -2,7 +2,7 @@
 
 #include "General.h"
 #include "Hex.h"
-
+#include <set>
 
 
 
@@ -28,6 +28,9 @@ namespace game_module
 		Map(size_type dimension = 10,
 			size_type player_number = 6,
 			const std::string & map_type = "classic");
+
+		Map(const Map & map);
+
 
 		//Map(const Map & map);
 
@@ -63,13 +66,11 @@ namespace game_module
 
 		std::vector<Pair> get_exist_neighbours(Pair hex) const;
 		
+		std::vector<Pair> Map::get_district_border_hexs(const Pair & hex);
 
-		std::pair<size_type, std::vector<std::pair<size_type, std::vector<Pair>>>>
-			solve_maze(const Pair & hex,
-				const hex_color & basic_color,
-				const std::vector<std::pair<unit_type, bool>> * units_list = nullptr,
-				const hex_color & new_color = extra
-			);
+		std::vector<Pair> easy_solve_maze(const Pair & hex) const;
+
+		std::vector<Pair> Map::solve_maze(const Pair & hex);
 
 	private:
 
@@ -83,5 +84,33 @@ namespace game_module
 
 
 	void print_map(const Map & map);
+
+
+	struct HexImpress
+	{
+
+		Pair Coordinates;
+		hex_color Color;
+		unit_type UnitType;
+
+		HexImpress(const Hex & hex);
+
+	};
+
+
+
+	struct MapImpress
+	{
+
+		HexImpress *** Root;
+		size_type Dimension;
+
+		~MapImpress();
+
+		MapImpress(const Map & map);
+
+		HexImpress & operator () (const Pair & pair);
+
+	};
 
 }
