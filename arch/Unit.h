@@ -3,169 +3,220 @@
 #include "Hex.h"
 
 
+
 namespace game_module
 {
 
+	class Hex;
+
 	class Unit
 	{
+
 	protected:
+
 		Hex * Field; // гекс на котором юнит находится, юнит принадлежит владельцу гекса
 
 	public:
+
 		virtual ~Unit();
-		Unit(Hex * hex); // основной конструктор
 
-		// получение информации о юните
-		pair coordinates() const;
+		Unit(Hex * hex);
+
+		Pair coordinates() const;
+
 		size_type index() const;
-		
-		virtual size_type strength() = 0; 
-		virtual unit_type type() = 0; // возвращает тип юнита
-		//
 
-		bool operator == (const Unit & unit) const;
+		virtual size_type strength() const = 0;
+		virtual unit_type type() const = 0; 
 
-		void set_hex(Hex * hex); // удаляет также юнита в гексе назначения	
+		void set_hex(Hex * hex);
+
 	};
 
-	bool operator != (const Unit & unit1, const Unit & unit2);
-	
-	Unit * unit_factory(size_type type, size_type strength = 0);
-	// в случае недопустимого значения силы возвращает nullptr
-	
+
+
+	Unit * unit_factory(unit_type type, Hex * hex, size_type strength = 0);
+
 
 	class ActiveUnit
 		: public Unit
 	{
+
 	protected:
+
 		size_type Strength;
 
 	public:
-		virtual ~ActiveUnit();
+
+		virtual ~ActiveUnit() = default;
+
 		ActiveUnit(Hex * hex, size_type strng);
+
 		size_type strength() const;
+
 	};
 
 
 	class Army
 		: public ActiveUnit
 	{
+
 	private:
+
 		bool Moved;
-		
+
 	public:
-		~Army();
+
+		~Army() = default;
+
 		Army(Hex * hex, size_type strng);
-		unit_type type();
+
+		unit_type type() const;
+		
 		bool moved() const;
+
 		static size_type move_points();
 
 		void set_strength(size_type strng);
+
 		void set_moved(bool moved);
+
 		void die(); // создает могилу на гексе, применяется при нехватке снабжения
+
 	};
 
 
-	class Tower
+	struct Tower
 		: public ActiveUnit
 	{
-	public:
-		~Tower();
+		~Tower() = default;
+
 		Tower(Hex * hex, size_type strng);
-		unit_type type();
+
+		unit_type type() const;
+
 	};
 
 
 	class Capital
 		: public ActiveUnit
 	{
-	private:
+
 		size_type DistrictIndex;
 		size_type DistrictMoney;
 
 	public:
-		~Capital();
-		Capital(Hex * hex);
-		Capital(Capital * capital);
 
-		unit_type type();
+		~Capital() = default;
+
+		Capital(Hex * hex);
+
+		unit_type type() const;
+
 		size_type district_index() const;
+
 		size_type district_money() const;
 
 		void set_district_index(size_type new_index);
+
 		bool change_district_money(int money);  // прибавляет money к DistrictMoney,
-		// если получается меньше 0, приравнивает DistrictMoney к нулю
-		// и возвращает false
+												// если получается меньше 0, приравнивает DistrictMoney к нулю
+												// и возвращает false
+
 	};
 
 
-	class PassiveUnit
+
+	struct PassiveUnit
 		:public Unit
 	{
-	public:
-		virtual ~PassiveUnit();
+		virtual ~PassiveUnit() = default;
+
 		PassiveUnit(Hex * hex);
-		size_type strength(); // возвращает 0
+
+		size_type strength() const;
+
 	};
 
 
-	class Farm
+	struct Farm
 		: public PassiveUnit
 	{
-	public:
-		~Farm();
+		~Farm() = default;
+
 		Farm(Hex * hex);
-		unit_type type();
+
+		unit_type type() const;
+
 		static size_type income();
+
 	};
 
 
 	class Tree
 		: public PassiveUnit
 	{
+
 	protected:
+
 		size_type TurnsFromDouble;
 
 	public:
-		virtual ~Tree();
+
+		virtual ~Tree() = default;
+
 		Tree(Hex * hex);
+
+		virtual size_type turns_to_double() const = 0;
+
 		bool ready_to_double() const;
 
 		void has_doubled(); // обнуляет turns_from_double
+
 		void operator ++(); // ++turns_from_double
+
 	};
 
 
-	class Palm
+	struct Palm
 		: public Tree
 	{
-	public:
-		~Palm();
+
+		~Palm() = default;
+
 		Palm(Hex * hex);
-		static size_type turns_to_double(); // возвращает срок за который размножается данный тип
-		unit_type type();
+
+		size_type turns_to_double() const; // возвращает срок за который размножается данный тип
+
+		unit_type type() const;
 
 	};
 
 
-	class Pine
+	struct Pine
 		: public Tree
 	{
-	public:
-		~Pine();
+
+		~Pine() = default;
+
 		Pine(Hex * hex);
-		static size_type turns_to_double(); // возвращает срок за который размножается данный тип
-		unit_type type();
+
+		size_type turns_to_double() const; // возвращает срок за который размножается данный тип
+
+		unit_type type() const;
 	};
 
 
-	class Grave
+	struct Grave
 		: public PassiveUnit
 	{
-	public:
-		~Grave();
+		~Grave() = default;
+
 		Grave(Hex * hex);
-		unit_type type();
+
+		unit_type type() const;
+
 	};
-	
+
+
 }
