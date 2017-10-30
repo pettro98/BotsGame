@@ -15,7 +15,6 @@ namespace game_module
 		generate_map(Dimension, player_number, MapType);
 	}
 
-
 	size_type Map::dimension() const
 	{
 		return Dimension;
@@ -96,7 +95,9 @@ namespace game_module
 
 		for (Pair & i : get_neighbours(coord1, coord2))
 		{
-			if ((*this)(i).index() != -1)
+			if (i.First >= 0 && i.First < Dimension
+			&& i.Second >= 0 && i.Second < Dimension
+			&& (*this)(i).index() != -1)
 				result.push_back(i);
 		}
 
@@ -109,19 +110,81 @@ namespace game_module
 	}
 
 
-	std::pair<size_type, std::vector<std::pair<size_type, std::vector<Pair>>>>
-		Map::solve_maze(const Pair & hex,
-			const hex_color & basic_color,
-			const std::vector<std::pair<unit_type, bool>> * units_list,
-			const hex_color & new_color
-		)
+	std::vector<Pair> Map::get_district_border_hexs(const Pair & hex)
+	{
+
+		std::vector<Pair> result;
+
+		bool incomplete = true;
+		size_type radius = 1;
+
+		while (incomplete)
+		{
+			incomplete = false;
+			for (auto & i : get_hex_row(hex, radius, Dimension))
+				if ((*this)(i).index() != black 
+					&& (*this)(i).index() != (*this)(hex).index())
+				{
+					for (auto & j : get_exist_neighbours(i))
+						if ((*this)(j).index() == (*this)(hex).index())
+						{
+							result.push_back(i);
+							break;
+						}
+				}
+				else if ((*this)(i).index() == (*this)(hex).index())
+					incomplete = true;
+
+
+			++radius;
+		}
+
+		return result;
+
+	}
+
+	std::vector<Pair> Map::easy_solve_maze(const Pair & hex) const
+	{
+
+		std::vector<Pair> result;
+
+		if ((*this)(hex).get_hex_capital() == nullptr)
+			return result;
+
+		result.push_back(hex);
+
+		bool incomplete = true;
+		size_type radius = 1;
+
+		while (incomplete)
+		{
+			incomplete = false;
+			for (auto & i : get_hex_row(hex, radius, Dimension))
+				if ((*this)(hex).get_hex_capital() == (*this)(i).get_hex_capital())
+				{
+					incomplete = true;
+					result.push_back(i);
+				}
+
+			++radius;
+		}
+
+		return result;
+
+	}
+
+
+	std::vector<Pair> Map::solve_maze(const Pair & hex)
 	{
 		
-		std::pair<size_type, std::vector<std::pair<size_type, std::vector<Pair>>>> result;
-		if (units_list)
-			result.second.reserve(units_list->size());
+		std::vector<Pair> result;
 
-		(*this)(hex).set_index(new_color);
+		MapImpress map_impress(*this);
+
+		hex_color basic_color = map_impress(hex).Color;
+
+		map_impress(hex).Color = extra;
+		result.push_back(hex);
 
 		size_type radius = 1;
 		bool incomplete = true;
@@ -137,47 +200,37 @@ namespace game_module
 
 			for (auto & i : row)
 			{
-				if ((*this)(i).index() == basic_color)
+				if (map_impress(i).Color == basic_color)
 				{
-					if (units_list)
-					{
-						++result.first;
-						for (size_type j = 0; j < units_list->size(); ++j)
-							if ((*units_list)[j].first == (*this)(i).get_hex_unit_type())
-							{
-								++result.second[j].first;
-								if ((*units_list)[j].second)
-									result.second[j].second.push_back(i);
-							}
-					}
-					(*this)(i).set_index(new_color);
-					incomplete = true;
+					for (auto & j : get_exist_neighbours(i))
+						if (map_impress(j).Color == extra)
+						{
+							map_impress(i).Color = extra;
+							result.push_back(i);
+							incomplete = true;
+							break;
+						}
 				}
 			}
 
 			for (auto i = row.rbegin(); i != row.rend(); ++i)
 			{
-				if ((*this)(*i).index() == basic_color)
+				if (map_impress(*i).Color == basic_color)
 				{
-					if (units_list)
-					{
-						++result.first;
-						for (size_type j = 0; j < units_list->size(); ++j)
-							if ((*units_list)[j].first == (*this)(*i).get_hex_unit_type())
-							{
-								++result.second[j].first;
-								if ((*units_list)[j].second)
-									result.second[j].second.push_back(*i);
-							}
-					}
-					(*this)(*i).set_index(new_color);
-					incomplete = true;
+					for (auto & j : get_exist_neighbours(*i))
+						if (map_impress(j).Color == extra)
+						{
+							map_impress(*i).Color = extra;
+							result.push_back(*i);
+							incomplete = true;
+							break;
+						}
 				}
 			}
 			
 			for (auto & i : row)
 			{
-				if ((*this)(i).index() == new_color)
+				if (map_impress(i).Color == extra)
 				{
 					find = true;
 					break;
@@ -197,6 +250,7 @@ namespace game_module
 		return result;
 			
 	}
+
 	
 
 	void Map::generate_map( // вспомогательный метод, генерирующий карту, вызывается в конструкторе
@@ -212,7 +266,6 @@ namespace game_module
 		size_t y_max = y_dimension;
 
 		Hex *** root = new Hex **[y_max];
-		size_t useless_hexs = 0;
 
 		for (size_t i = 0; i < y_max; ++i)
 		{
@@ -226,7 +279,6 @@ namespace game_module
 					)
 				{
 					root[i][j]->set_index(black);
-					++useless_hexs;
 				}
 			}
 		}
@@ -251,6 +303,48 @@ namespace game_module
 			std::cout << std::endl;
 		}
 
+	}
+
+
+	MapImpress::~MapImpress()
+	{
+		for (size_type i = 0; i < Dimension; ++i)
+		{
+			for (size_type j = 0; j < Dimension; ++j)
+				delete Root[i][j];
+			delete[] Root[i];
+		}
+		delete[] Root;
+	}
+
+	MapImpress::MapImpress(const Map & map)
+		: Dimension(map.dimension())
+	{
+		HexImpress *** root = new HexImpress **[Dimension];
+
+		for (size_t i = 0; i < Dimension; ++i)
+		{
+			root[i] = new HexImpress *[Dimension];
+			for (size_t j = 0; j < Dimension; ++j)
+				root[i][j] = new HexImpress(map(Pair(i, j)));
+		}
+
+		Root = root;
+	}
+
+	HexImpress & MapImpress::operator () (const Pair & pair)
+	{
+		return *Root[pair.First][pair.Second];
+	}
+
+	HexImpress::HexImpress(const Hex & hex)
+		: Coordinates(hex.coordinates())
+		, Color(hex.index())
+	{
+		if (hex.occupied())
+			UnitType = hex.get_hex_unit_type();
+		else
+			UnitType = none;
 	}
 
 
