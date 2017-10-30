@@ -34,14 +34,11 @@ namespace game_module
 		std::vector<Pair> get_neighbours(Pair hex) const;
 		std::vector<Pair> get_hex_to_capture(Pair hex) const;
 		std::vector<Pair> get_district_units(Pair hex, unit_type type) const;
-		std::vector<Pair> get_enemy_br_units(size_type district_index) const;
-		std::vector<Pair> get_enemy_inv_armies(size_type district_index) const;
-		std::vector<Pair> get_enemy_br_towers(size_type district_index) const;
-		std::vector<Pair> get_enemy_br_farms(size_type district_index) const;
-		std::vector<Pair> get_district_static(size_type district_index) const;
-		std::vector<Pair> get_br_static(size_type district_index) const;
-		std::vector<Pair> get_district_palms(size_type district_index) const;
-		std::vector<Pair> get_br_palms(size_type district_index) const;
+		std::vector<Pair> get_br_unit(Pair hex, unit_type type) const;
+		std::vector<Pair> get_enemy_br_units(Pair hex) const;
+		std::vector<Pair> get_enemy_inv_armies(Pair hex) const;
+		std::vector<Pair> get_district_static(Pair hex) const;
+		std::vector<Pair> get_br_static(Pair hex) const;
 
 		bool make_move(Pair start, Pair end);
 		bool buy_tower(Pair hex, size_type strength = 1);
