@@ -5,11 +5,33 @@
 #include <list>
 #include <map>
 
+
 namespace game_module
 {
 
 	using size_type = short;
-	using pair = std::pair<size_type, size_type>;
+
+	struct Pair
+	{
+
+		size_type First;
+		size_type Second;
+
+		~Pair() = default;
+		Pair() = default;
+
+		Pair(const Pair & pair);
+
+		Pair(size_type first, size_type second);
+
+		bool operator == (const Pair & pair) const;
+
+	};
+
+	bool operator != (const Pair & pair1, const Pair & pair2);
+
+	std::ostream & operator << (std::ostream & out, const Pair & pair);
+
 
 	enum unit_type
 	{
@@ -22,6 +44,19 @@ namespace game_module
 		pine,
 		grave
 	};
+
+	enum hex_color {
+		black = -1,
+		blank,
+		green,
+		red,
+		blue,
+		orange,
+		purple,
+		yellow,
+		extra
+	};
+
 
 	struct Result // структура результатов игры
 	{
