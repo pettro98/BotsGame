@@ -144,35 +144,101 @@ namespace game_module
 	{
 		return MyAccess->get_game_map().get_exist_neighbours(hex);
 	}
-	/*
+
+	
 	std::vector<Pair> Controller::get_hex_to_capture(Pair hex) const
 	{
+		return MyAccess->get_game_map().get_district_border_hexs(hex);
+	}
+
+	std::vector<Pair> Controller::get_district_units(Pair hex, unit_type type) const
+	{
 		std::vector<Pair> result;
-		//for (auto & i : )
-	}*/
 
-	/*
-	std::vector<Pair> Controller::get_district_units(Pair hex, unit_type type) const;
-	std::vector<Pair> Controller::get_enemy_br_units(size_type district_index) const;
-	std::vector<Pair> Controller::get_enemy_inv_armies(size_type district_index) const;
-	std::vector<Pair> Controller::get_enemy_br_towers(size_type district_index) const;
-	std::vector<Pair> Controller::get_enemy_br_farms(size_type district_index) const;
-	std::vector<Pair> Controller::get_district_static(size_type district_index) const;
-	std::vector<Pair> Controller::get_br_static(size_type district_index) const;
-	std::vector<Pair> Controller::get_district_palms(size_type district_index) const;
-	std::vector<Pair> Controller::get_br_palms(size_type district_index) const;
+		for (auto & i : MyAccess->get_game_map().easy_solve_maze(hex))
+			if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit_type() == type)
+				result.push_back(i);
 
-	bool Controller::make_move(Pair start, Pair end);
-	bool Controller::buy_tower(Pair hex, size_type strength = 1);
-	bool Controller::buy_farm(Pair hex);
-	bool Controller::buy_army(Pair hex, size_type strength = 1);
+		return result;
 
-	size_type Controller::get_district_income(Pair hex) const;
-	size_type Controller::get_district_costs(Pair hex) const;
-	size_type Controller::get_farm_cost(size_type district_index) const;
-	size_type Controller::get_army_cost(size_type strength = 1) const;
-	size_type Controller::get_tower_cost(size_type strength = 1) const;
-	std::vector<Pair> Controller::get_army_list() const;
+	}
 
-	*/
+	std::vector<Pair> Controller::get_br_unit(Pair hex, unit_type type) const
+	{
+		std::vector<Pair> result;
+
+		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
+			if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit_type() == type)
+				result.push_back(i);
+
+		return result;
+	}
+
+	std::vector<Pair> Controller::get_enemy_br_units(Pair hex) const
+	{
+
+		std::vector<Pair> result;
+
+		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
+			if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit_type() != palm
+				&& (*MyAccess)(hex)->get_hex_unit_type() != pine
+				&& (*MyAccess)(hex)->get_hex_unit_type() != grave)
+				result.push_back(i);
+
+		return result;
+
+	}
+
+	//std::vector<Pair> Controller::get_enemy_inv_armies(Pair hex) const;
+
+
+	std::vector<Pair> Controller::get_district_static(Pair hex) const
+	{
+		std::vector<Pair> result;
+
+		for (auto & i : MyAccess->get_game_map().easy_solve_maze(hex))
+			if ((*MyAccess)(hex)->occupied() && ( (*MyAccess)(hex)->get_hex_unit_type() == palm
+				|| (*MyAccess)(hex)->get_hex_unit_type() == pine
+				|| (*MyAccess)(hex)->get_hex_unit_type() == grave))
+				result.push_back(i);
+
+		return result;
+	}
+
+	std::vector<Pair> Controller::get_br_static(Pair hex) const
+	{
+		std::vector<Pair> result;
+
+		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
+			if ((*MyAccess)(hex)->occupied() && ((*MyAccess)(hex)->get_hex_unit_type() == palm
+				|| (*MyAccess)(hex)->get_hex_unit_type() == pine
+				|| (*MyAccess)(hex)->get_hex_unit_type() == grave))
+				result.push_back(i);
+
+		return result;
+	}
+
+	
+
+	//bool Controller::make_move(Pair start, Pair end);
+
+	//bool Controller::buy_tower(Pair hex, size_type strength = 1);
+
+	//bool Controller::buy_farm(Pair hex);
+
+	//bool Controller::buy_army(Pair hex, size_type strength = 1);
+
+	//size_type Controller::get_district_income(Pair hex) const;
+
+	//size_type Controller::get_district_costs(Pair hex) const;
+
+	//size_type Controller::get_farm_cost(size_type district_index) const;
+
+	//size_type Controller::get_army_cost(size_type strength = 1) const;
+
+	//size_type Controller::get_tower_cost(size_type strength = 1) const;
+
+	//std::vector<Pair> Controller::get_army_list() const;
+
+	
 }
