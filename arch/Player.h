@@ -8,13 +8,15 @@
 namespace game_module
 {
 
+	class Controller;
+
 	class Player
 	{
 	private:
 		size_type Index; // индекс игрока
 		std::string Name; // имя игрока
 
-		std::map<size_type, pair> Capitals; // столицы игрока
+		std::list<Pair> Capitals; // столицы игрока
 
 		Controller * GameController;
 
@@ -28,9 +30,9 @@ namespace game_module
 		//
 
 		// основные деструктор, конструктор
-		virtual ~Player();
+		virtual ~Player() = default;
 		Player(const size_type & pl_index, const std::string pl_name,
-			   Controller * game_controller);
+			Controller * game_controller);
 		//
 
 
@@ -39,17 +41,16 @@ namespace game_module
 		std::string name() const;
 		//
 
-		pair get_capital(size_type capital_index) const;
-		size_type get_capital_numbers() const;
-		std::map<size_type, pair> get_capitals() const;
+		size_type get_capitals_number() const;
+		std::list<Pair> get_capitals() const;
 
 		bool operator == (const Player & player) const;
 
 		virtual void turn() = 0;
 
 	private:
-		void add_capital(Capital * capital);
-		bool remove_capital(size_type capital_index);
+		void add_capital(const Pair & capital);
+		bool remove_capital(const Pair & capital);
 
 		friend class Game;
 	};
