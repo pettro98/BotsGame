@@ -4,68 +4,84 @@
 #include "Hex.h"
 
 
+
+
 namespace game_module
 {
-	template<size_t N>
+
+
 	class Map
 	{
-	private:
-		using mas = std::array<std::array<Hex, N>, N>;
 
-		mas Root;		     // двумерный массив гексов
+	private:
+
+		Hex *** Root; // указатель на двумерный массив гексов
+		size_type Dimension; // размерность карты
 		std::string MapType; // тип карты
 
 	public:
-		~Map() // вызывает метод clear
-		{
-			clear();
-		}
+
+		~Map() = default; // вызывает метод clear
+
+		Map() = default;
+
+		Map(size_type dimension = 10,
+			size_type player_number = 6,
+			const std::string & map_type = "classic");
+
+		//Map(const Map & map);
+
+		//Map & operator = (const Map & map);
+
 
 		// базовые конструкторы, операторы
-		Map(size_type player_number = 6, const std::string & map_type = "classic")
-		{
-			generate_map(player_number, map_type)
-		}
-
-		Map(const Map & map) = delete;
-		Map & operator = (const Map & map) = delete;		//зачем?
-
 		Map(Map && map) = delete;
 		Map & operator = (Map && map) = delete;
 		//
 
-		size_t dimension() const
-		{
-			return N;
-		}
-		std::string map_type() const
-		{
-			return MapType;
-		}
+		size_type dimension() const;
 
-		Hex & operator () (const pair & coord)		   // выдаёт гекс
-		{
-			return Root[coord.first][coord.second];
-		}
-		Hex & operator () (size_type coord_1, size_type coord_2) // выдаёт гекс
-		{
-			return Root[coord_1][coord_2];
-		}
+		std::string map_type() const;
 
-		void clear() // очищает карту, в том числе удаляет всех юнитов на ней
-		{
-			for (int i = 0; i < N; ++i)
-				for (int j = 0; j < N; ++j)
-				{
-					Root[i][j].delete_hex_unit();
-				}
-		}
+		Hex & operator () (const Pair & pair);
+
+		Hex operator () (const Pair & pair) const;
+
+		Hex & operator () (size_type coord1, size_type coord2);
+
+		Hex operator () (size_type coord1, size_type coord2) const;
+
+
+		//void clear(); // очищает карту, в том числе удаляет всех юнитов на ней
+
+		
+		std::vector<Pair> get_neighbours(size_type coord1, size_type coord2) const;
+
+		std::vector<Pair> get_neighbours(Pair hex) const;
+
+		std::vector<Pair> get_exist_neighbours(size_type coord1, size_type coord2) const;
+
+		std::vector<Pair> get_exist_neighbours(Pair hex) const;
+		
+
+		std::pair<size_type, std::vector<std::pair<size_type, std::vector<Pair>>>>
+			solve_maze(const Pair & hex,
+				const hex_color & basic_color,
+				const std::vector<std::pair<unit_type, bool>> * units_list = nullptr,
+				const hex_color & new_color = extra
+			);
 
 	private:
+
 		void generate_map( // вспомогательный метод, генерирующий карту, вызывается в конструкторе
-						  size_type player_number = 6,
-						  const std::string & map_type = "classic");
+			size_type dimension = 10, size_type player_number = 6,
+			const std::string & map_type = "classic"
+		);
+
 
 	};
+
+
+	void print_map(const Map & map);
 
 }
