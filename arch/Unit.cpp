@@ -65,7 +65,7 @@ namespace game_module
 
 			switch (type)
 			{
-			case game_module::none:
+			case game_module::unit_type::none:
 				break;
 			case game_module::army:
 			{
@@ -131,6 +131,11 @@ namespace game_module
 			return Moved;
 		}
 
+		size_type Army::cost() const
+		{
+			return 2 * pow(3, Strength - 1);
+		}
+
 		size_type Army::move_points()
 		{
 			return 6;
@@ -162,6 +167,13 @@ namespace game_module
 		unit_type Tower::type() const
 		{
 			return tower;
+		}
+		
+		size_type Tower::cost() const
+		{
+			if (Strength == 1)
+				return 2;
+			return 7;
 		}
 
 

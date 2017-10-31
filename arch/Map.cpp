@@ -203,6 +203,7 @@ namespace game_module
 				if (map_impress(i).Color == basic_color)
 				{
 					for (auto & j : get_exist_neighbours(i))
+					{
 						if (map_impress(j).Color == extra)
 						{
 							map_impress(i).Color = extra;
@@ -210,6 +211,7 @@ namespace game_module
 							incomplete = true;
 							break;
 						}
+					}
 				}
 			}
 

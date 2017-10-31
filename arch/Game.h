@@ -44,7 +44,6 @@ namespace game_module
 		Hex * operator () (Pair hex);
 		Hex * operator () (size_type coord1, size_type coord2);
 		Unit * get_unit(Pair hex);
-		//std::vector<Player> & get_players();
 		Map & get_game_map();
 		size_type current_turn() const;
 		size_type max_turns() const;

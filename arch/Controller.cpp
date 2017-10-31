@@ -98,13 +98,13 @@ namespace game_module
 		return MyAccess->get_game_map().dimension();
 	}
 
-	/*
-	size_type Controller::get_players_number() const
-	{
-		//return MyAccess->get_players.size();
-		return 0;
-	}*/
-	
+	//
+	//size_type Controller::get_players_number() const
+	//{
+	//	return MyAccess->get_players().size();
+	//	return 0;
+	//}
+
 	bool Controller::can_place_static(Pair hex) const
 	{
 		if (!(*MyAccess)(hex)->occupied())
@@ -220,25 +220,115 @@ namespace game_module
 
 	
 
-	//bool Controller::make_move(Pair start, Pair end);
+	bool Controller::make_move(Pair start, Pair end)
+	{
+		if (can_move(start, end))
+		{
+			(*MyAccess)(end)->set_hex_unit((*MyAccess)(start)->get_hex_unit());
+			(*MyAccess)(start)->remove_hex_unit();
+			return true;
+		}
+		return false;
+	}
 
-	//bool Controller::buy_tower(Pair hex, size_type strength = 1);
+	bool Controller::buy_tower(Pair hex, size_type strength)
+	{
+		if (strength < 1 || strength > 2)
+			return false;
+		if ((*MyAccess)(hex)->get_hex_capital()->district_money() - get_tower_cost(strength) >= 0)
+		{
+			(*MyAccess)(hex)->remove_hex_unit(); //!
+			Unit * new_tower = new Tower((*MyAccess)(hex), strength);
+			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_tower_cost(strength));
+			return true;
+		}
+		return false;
+	}
 
-	//bool Controller::buy_farm(Pair hex);
+	bool Controller::buy_farm(Pair hex)
+	{
+		if ((*MyAccess)(hex)->get_hex_capital()->district_money() - get_farm_cost(hex) >= 0)
+		{
+			(*MyAccess)(hex)->remove_hex_unit(); //!
+			Unit * new_tower = new Farm((*MyAccess)(hex));
+			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_farm_cost(hex));
+			return true;
+		}
+		return false;
+	}
 
-	//bool Controller::buy_army(Pair hex, size_type strength = 1);
+	bool Controller::buy_army(Pair hex, size_type strength)
+	{
+		if (strength < 1 || strength > 4)
+			return false;
+		if ((*MyAccess)(hex)->get_hex_capital()->district_money() - get_army_cost(strength) >= 0)
+		{
+			(*MyAccess)(hex)->remove_hex_unit(); //!
+			Unit * new_tower = new Army((*MyAccess)(hex), strength);
+			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_army_cost(strength));
+			return true;
+		}
+		return false;
 
-	//size_type Controller::get_district_income(Pair hex) const;
+	}
 
-	//size_type Controller::get_district_costs(Pair hex) const;
+	size_type Controller::get_district_income(Pair hex) const
+	{
+		size_type result = 0;
 
-	//size_type Controller::get_farm_cost(size_type district_index) const;
+		result += MyAccess->get_game_map().easy_solve_maze(hex).size();
+		result += 4 * (get_district_units(hex, farm).size());
+		result -= 2 * (get_district_static(hex).size());
 
-	//size_type Controller::get_army_cost(size_type strength = 1) const;
+		for (auto & i : get_district_units(hex, army))
+		{
+			result -= (static_cast<Army *>((*MyAccess)(hex)->get_hex_unit()))->cost();
+		}
 
-	//size_type Controller::get_tower_cost(size_type strength = 1) const;
+		for (auto & i : get_district_units(hex, tower))
+		{
+			result -= (static_cast<Tower *>((*MyAccess)(hex)->get_hex_unit()))->cost();
+		}
 
-	//std::vector<Pair> Controller::get_army_list() const;
+		return result;
+
+	}
+
+	size_type Controller::get_farm_cost(Pair hex) const
+	{
+		return 12 + 2 * get_district_units(hex, farm).size();
+	}
+
+	size_type Controller::get_army_cost(size_type strength) const
+	{
+		if (strength > 0, strength < 5)
+			return 10 * strength;
+		return 0;
+	}
+
+	size_type Controller::get_tower_cost(size_type strength) const
+	{
+		if (strength == 1)
+			return 15;
+		if (strength == 2)
+			return 35;
+		return 0;
+	}
+
+	std::vector<Pair> Controller::get_army_list(Pair hex) const
+	{
+
+		std::vector<Pair> result;
+
+		for (auto & i : get_district_units(hex, army))
+		{
+			if (!(static_cast<Army *>((*MyAccess)(i)->get_hex_unit()))->moved())
+				result.push_back(i);
+		}
+
+		return result;
+
+	}
 
 	
 }

@@ -69,12 +69,7 @@ namespace game_module
 	{
 		return (*GameMap)(hex).get_hex_unit();
 	}
-	/*
-	std::vector<Player> & Game::get_players()
-	{
-		return Players;
-	}*/
-
+	
 	Map & Game::get_game_map()
 	{
 		return *GameMap;

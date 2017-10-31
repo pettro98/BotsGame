@@ -75,6 +75,8 @@ namespace game_module
 		
 		bool moved() const;
 
+		size_type cost() const;
+
 		static size_type move_points();
 
 		void set_strength(size_type strng);
@@ -94,6 +96,8 @@ namespace game_module
 		Tower(Hex * hex, size_type strng);
 
 		unit_type type() const;
+
+		size_type cost() const;
 
 	};
 

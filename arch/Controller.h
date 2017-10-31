@@ -46,11 +46,10 @@ namespace game_module
 		bool buy_army(Pair hex, size_type strength = 1);
 
 		size_type get_district_income(Pair hex) const;
-		size_type get_district_costs(Pair hex) const;
-		size_type get_farm_cost(size_type district_index) const;
+		size_type get_farm_cost(Pair hex) const;
 		size_type get_army_cost(size_type strength = 1) const;
 		size_type get_tower_cost(size_type strength = 1) const;
-		std::vector<Pair> get_army_list() const;
+		std::vector<Pair> get_army_list(Pair hex) const;
 	};
 
 }
