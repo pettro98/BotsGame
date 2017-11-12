@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+# Build dirs
+*/Debug/*
+*\Debug\*
+*/Release/*
+*\Release\*
+*/.vs/*
+*\.vs\*
+
+# VS project files
+*.sln
+*.db
+*.filters
+*.vcxproj
