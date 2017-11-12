@@ -8,30 +8,23 @@
 
 namespace game_module
 {
-
-	using size_type = short;
+	using size_type = int;
 
 	struct Pair
 	{
-
 		size_type First;
 		size_type Second;
-
 		~Pair() = default;
 		Pair() = default;
-
 		Pair(const Pair & pair);
-
 		Pair(size_type first, size_type second);
-
 		bool operator == (const Pair & pair) const;
-
+		bool operator < (const Pair & pair) const;
 	};
 
 	bool operator != (const Pair & pair1, const Pair & pair2);
 
 	std::ostream & operator << (std::ostream & out, const Pair & pair);
-
 
 	enum unit_type
 	{
@@ -44,34 +37,54 @@ namespace game_module
 		pine,
 		grave
 	};
+	
+	bool is_none(unit_type type);
+	bool is_army(unit_type type);
+	bool is_tower(unit_type type);
+	bool is_capital(unit_type type);
+	bool is_farm(unit_type type);
+	bool is_palm(unit_type type);
+	bool is_pine(unit_type type);
+	bool is_grave(unit_type type);
+	bool is_tree(unit_type type);
+	bool is_static(unit_type type);
+	bool is_player_unit(unit_type type);
+	bool is_ready_to_take(unit_type type);
 
 	enum hex_color {
 		black = -1,
 		blank,
-		green,
 		red,
-		blue,
+		green,
 		orange,
 		purple,
+		blue,
 		yellow,
 		extra
 	};
 
+	bool is_color(hex_color color);
+	bool is_black(hex_color color);
+	bool is_blank(hex_color color);
+	bool is_red(hex_color color);
+	bool is_green(hex_color color);
+	bool is_orange(hex_color color);
+	bool is_purple(hex_color color);
+	bool is_blue(hex_color color);
+	bool is_yellow(hex_color color);
+	bool is_extra(hex_color color);
+	bool is_player_color(hex_color color);
 
-	struct Result // структура результатов игры
+	struct Result
 	{
 	public:
-		size_type winner = 0; // победитель игры, по умолчанию 0
-		std::vector<size_type> points; // очки каждого игрока
-		std::vector<size_type> last_turn; // ход выхода из игры каждого игрока
-		std::vector<size_type> built_armies; // суммарная сила армий, 
-											 // построенных каждым игроком за время партии
-		std::vector<size_type> built_farms; // кол - во всех ферм,
-											// построенных каждым игроком за время партии
-		std::vector<size_type> built_towers; // суммарная сила башен, 
-											 // построенных каждым игроком за время партии
-		std::vector<size_type> moves; // кол - во перемещений 
-									  // юнитов каждого игрока за время партии
+		size_type winner = 0;
+		std::vector<size_type> points;
+		std::vector<size_type> last_turn;
+		std::vector<size_type> built_armies;
+		std::vector<size_type> built_farms;
+		std::vector<size_type> built_towers;
+		std::vector<size_type> moves;
+		Result();
 	};
-
 }

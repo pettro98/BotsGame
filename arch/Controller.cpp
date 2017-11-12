@@ -8,10 +8,23 @@ namespace game_module
 		: MyAccess(my_access)
 	{ }
 
-
-	size_type Controller::get_index(const Pair & hex) const
+	hex_color Controller::color(const Pair & hex) const
 	{
-		return (*MyAccess)(hex)->index();
+		return (*MyAccess)(hex)->color();
+	}
+
+	Pair Controller::capital(const Pair & hex) const
+	{
+		if ((*MyAccess)(hex)->get_hex_capital() != nullptr)
+		{
+			return (*MyAccess)(hex)->get_hex_capital()->coordinates();
+		}
+		return Pair(0, 0);
+	}
+
+	std::vector<Pair> Controller::get_neighbours(const Pair & hex) const
+	{
+		return MyAccess->get_game_map().get_neighbours(hex);
 	}
 
 	size_type Controller::distance(const Pair & hex1, const Pair & hex2) const
@@ -19,73 +32,90 @@ namespace game_module
 		return get_distance(hex1, hex2);
 	}
 	
-	
 	bool Controller::can_move(const Pair & hex1, const Pair & hex2, size_type move_points) const
 	{
+		if (move_points == 0)
+		{
+			return false;
+		}
 		if (move_points == Army::move_points())
 		{
-			if (!(*MyAccess)(hex1)->occupied()
-				|| (*MyAccess)(hex1)->get_hex_unit()->type() != army
-				|| (*MyAccess)(hex2)->index() == black
-				|| (*MyAccess)(hex2)->get_hex_unit()->strength() >= (*MyAccess)(hex1)->get_hex_unit()->strength()
-				|| get_distance(hex1, hex2) > 6)
-				return false;
-		}
-
-		if (get_distance(hex1, hex2) == 1 && move_points >= 1)
-			return true;
-
-		for (auto & i : MyAccess->get_game_map().get_exist_neighbours(hex2))
-		{
-			if ((*MyAccess)(i)->index() == (*MyAccess)(hex1)->index())
+			if (is_black(color(hex1))
+				|| is_black(color(hex2))
+				|| !is_army(get_unit_type(hex1))
+				|| get_hex_strength(hex2) >= get_unit_strength(hex1)
+				|| distance(hex1, hex2) > 6)
 			{
-				if (can_move(hex1, i, --move_points))
-					return true;
+				return false;
 			}
-			else if (!(*MyAccess)(i)->occupied()
-				|| ((*MyAccess)(i)->occupied()
-					&& (*MyAccess)(i)->get_hex_unit()->strength() < (*MyAccess)(hex1)->get_hex_unit()->strength()))
-				if (can_move(hex1, i, 0))
-					return true;
 		}
-
+		if (distance(hex1, hex2) == 1 && move_points >= 1)
+		{
+			return true;
+		}
+		hex_color basic_color = color(hex1);
+		for (auto & i : MyAccess->get_game_map().get_neighbours(hex2,
+			[basic_color](hex_color color) { return color == basic_color; }))
+		{
+			if (can_move(hex1, i, move_points - 1))
+			{
+				return true;
+			}	
+		}
 		return false;
-
 	}
 	
-	unit_type Controller::get_unit_type(Pair hex) const
+	unit_type Controller::get_unit_type(const Pair & hex) const
 	{
-		if ((*MyAccess)(hex)->occupied())
-			return (*MyAccess)(hex)->get_hex_unit()->type();
-		return none;
+		return (*MyAccess)(hex)->get_hex_unit_type();
 	}
 
-	size_type Controller::get_strength(Pair hex) const
+	size_type Controller::get_unit_strength(const Pair & hex) const
 	{
 		if ((*MyAccess)(hex)->occupied())
-			return (*MyAccess)(hex)->get_hex_unit()->strength();
+		{
+			return get_unit(hex)->strength();
+		}
 		return 0;
 	}
 
-	bool Controller::get_moved(Pair hex) const
+	size_type Controller::get_hex_strength(const Pair & hex) const
+	{	
+		if (is_player_color(color(hex)))
+		{
+			size_type result(get_unit_strength(hex));
+			hex_color basic_color = color(hex);
+			for (auto & i : MyAccess->get_game_map().get_neighbours(hex,
+				[basic_color](hex_color color) { return color == basic_color; },
+				is_player_unit))
+			{
+				if (get_unit_strength(i) > result)
+				{
+					result = get_unit_strength(i);
+				}
+			}
+			return result;
+		}
+		return 0;
+		
+	}
+
+	bool Controller::get_moved(const Pair & hex) const
 	{
-		if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit()->type() == army)
-			return static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())->moved();
+		if (get_unit_type(hex) == game_module::unit_type::army)
+		{
+			return static_cast<Army *>(get_unit(hex))->moved();
+		}
 		return true;
 	}
 
-	size_type Controller::get_district_money(Pair hex) const
+	size_type Controller::get_district_money(const Pair & hex) const
 	{
-		if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit()->type() == capital)
-			return static_cast<Capital *>((*MyAccess)(hex)->get_hex_unit())->district_money();
+		if (get_capital(hex))
+		{
+			return get_capital(hex)->district_money();
+		}
 		return 0;
-	}
-
-	size_type Controller::get_district_index(Pair hex) const
-	{
-		if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit()->type() == capital)
-			return static_cast<Capital *>((*MyAccess)(hex)->get_hex_unit())->district_index();
-		return -1;
 	}
 
 	std::string Controller::get_map_type() const
@@ -97,238 +127,492 @@ namespace game_module
 	{
 		return MyAccess->get_game_map().dimension();
 	}
-
-	//
-	//size_type Controller::get_players_number() const
-	//{
-	//	return MyAccess->get_players().size();
-	//	return 0;
-	//}
-
-	bool Controller::can_place_static(Pair hex) const
-	{
-		if (!(*MyAccess)(hex)->occupied())
-			return true;
-		if ((*MyAccess)(hex)->occupied()
-			&& ((*MyAccess)(hex)->get_hex_unit()->type() == pine
-				|| (*MyAccess)(hex)->get_hex_unit()->type() == palm
-				|| (*MyAccess)(hex)->get_hex_unit()->type() == grave))
-			return true;
-		return false;
-	}
-
-	bool Controller::can_place_army(Pair hex, size_type str) const
-	{
-		if (str < 1 || str > 4)
-			return false;
-
-		if (!(*MyAccess)(hex)->occupied())
-			return true;
-
-		if ((*MyAccess)(hex)->occupied()
-			&& ((*MyAccess)(hex)->get_hex_unit()->type() == pine
-				|| (*MyAccess)(hex)->get_hex_unit()->type() == palm
-				|| (*MyAccess)(hex)->get_hex_unit()->type() == grave))
-			return true;
-
-		if ((*MyAccess)(hex)->occupied()
-			&& (*MyAccess)(hex)->get_hex_unit()->type() == army
-			&& (*MyAccess)(hex)->get_hex_unit()->strength() + str < 5)
-			return true;
-
-		return false;
-
-	}
-
-	std::vector<Pair> Controller::get_neighbours(Pair hex) const
-	{
-		return MyAccess->get_game_map().get_exist_neighbours(hex);
-	}
-
 	
-	std::vector<Pair> Controller::get_hex_to_capture(Pair hex) const
+	size_type Controller::get_players_number() const
+	{
+		size_type result(0);
+		for (auto & i : MyAccess->get_players())
+		{
+			if (MyAccess->player_in_game(i->color()))
+			{
+				++result;
+			}
+		}
+		return result;
+	}
+
+	size_type Controller::get_current_turn() const
+	{
+		return MyAccess->current_turn();
+	}
+
+	size_type Controller::get_max_turns() const
+	{
+		return MyAccess->max_turns();
+	}
+
+	bool Controller::can_place_static(const Pair & hex) const
+	{
+		if (MyAccess->get_current_player() == color(hex)
+			&& !(*MyAccess)(hex)->occupied())
+		{
+			return true;
+		}
+		return false;
+	}
+
+	bool Controller::can_place_army(const Pair & hex, size_type strength) const
+	{
+		if (strength < 1 || strength > 4 
+			|| MyAccess->get_current_player() != color(hex)
+			|| !(is_ready_to_take(get_unit_type(hex))
+				|| (is_army(get_unit_type(hex)) && get_unit_strength(hex) + strength < 5)))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	std::vector<Pair> Controller::get_hex_to_capture(const Pair & hex) const
 	{
 		return MyAccess->get_game_map().get_district_border_hexs(hex);
 	}
 
-	std::vector<Pair> Controller::get_district_units(Pair hex, unit_type type) const
+	std::vector<Pair> Controller::get_district_units(const Pair & hex, unit_type seek_type) const
 	{
-		std::vector<Pair> result;
-
-		for (auto & i : MyAccess->get_game_map().easy_solve_maze(hex))
-			if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit_type() == type)
-				result.push_back(i);
-
-		return result;
-
+		return MyAccess->get_game_map().district_units(hex,
+			[seek_type](unit_type type) { return type == seek_type; } );
 	}
 
-	std::vector<Pair> Controller::get_br_unit(Pair hex, unit_type type) const
+	std::vector<Pair> Controller::get_br_unit(const Pair & hex, unit_type type) const
 	{
 		std::vector<Pair> result;
-
 		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
-			if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit_type() == type)
-				result.push_back(i);
-
-		return result;
-	}
-
-	std::vector<Pair> Controller::get_enemy_br_units(Pair hex) const
-	{
-
-		std::vector<Pair> result;
-
-		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
-			if ((*MyAccess)(hex)->occupied() && (*MyAccess)(hex)->get_hex_unit_type() != palm
-				&& (*MyAccess)(hex)->get_hex_unit_type() != pine
-				&& (*MyAccess)(hex)->get_hex_unit_type() != grave)
-				result.push_back(i);
-
-		return result;
-
-	}
-
-	//std::vector<Pair> Controller::get_enemy_inv_armies(Pair hex) const;
-
-
-	std::vector<Pair> Controller::get_district_static(Pair hex) const
-	{
-		std::vector<Pair> result;
-
-		for (auto & i : MyAccess->get_game_map().easy_solve_maze(hex))
-			if ((*MyAccess)(hex)->occupied() && ( (*MyAccess)(hex)->get_hex_unit_type() == palm
-				|| (*MyAccess)(hex)->get_hex_unit_type() == pine
-				|| (*MyAccess)(hex)->get_hex_unit_type() == grave))
-				result.push_back(i);
-
-		return result;
-	}
-
-	std::vector<Pair> Controller::get_br_static(Pair hex) const
-	{
-		std::vector<Pair> result;
-
-		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
-			if ((*MyAccess)(hex)->occupied() && ((*MyAccess)(hex)->get_hex_unit_type() == palm
-				|| (*MyAccess)(hex)->get_hex_unit_type() == pine
-				|| (*MyAccess)(hex)->get_hex_unit_type() == grave))
-				result.push_back(i);
-
-		return result;
-	}
-
-	
-
-	bool Controller::make_move(Pair start, Pair end)
-	{
-		if (can_move(start, end))
 		{
-			(*MyAccess)(end)->set_hex_unit((*MyAccess)(start)->get_hex_unit());
-			(*MyAccess)(start)->remove_hex_unit();
+			if (get_unit_type(i) == type)
+			{
+				result.push_back(i);
+			}
+		}
+		return result;
+	}
+
+	std::vector<Pair> Controller::get_enemy_br_units(const Pair & hex) const
+	{
+		std::vector<Pair> result;
+		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
+		{
+			if (is_player_unit(get_unit_type(i)))
+			{
+				result.push_back(i);
+			}
+		}
+		return result;
+	}
+
+	std::vector<Pair> Controller::get_district_static(const Pair & hex) const
+	{
+		return MyAccess->get_game_map().district_units(hex, is_static);
+	}
+
+	std::vector<Pair> Controller::get_br_static(const Pair & hex) const
+	{
+		std::vector<Pair> result;
+		for (auto & i : MyAccess->get_game_map().get_district_border_hexs(hex))
+		{
+			if (is_static(get_unit_type(i)))
+			{
+				result.push_back(i);
+			}
+		}
+		return result;
+	}
+
+	bool Controller::make_move(const Pair & start, const Pair & end)
+	{
+		if (color(start) != MyAccess->get_current_player()
+			|| !can_move(start, end))
+		{
+			return false;
+		}
+		else
+		{
+			if (color(start) == color(end))
+			{
+				if (is_static(get_unit_type(end)))
+				{
+					get_capital(start)->change_district_income(2);
+				}
+				(*MyAccess)(end)->set_hex_unit(get_unit(start));
+				(*MyAccess)(start)->remove_hex_unit();
+			}
+			else
+			{
+				get_capital(start)->change_district_income(1);
+				if (get_capital(end))
+				{
+					get_capital(end)->change_district_income((*MyAccess)(end));
+				}
+				if (is_farm(get_unit_type(end)))
+				{
+					get_capital(end)->change_farms_number(-1);
+				}
+			}
+			(*MyAccess)(end)->set_hex_capital((*MyAccess)(start));
+			if (color(end) != color(start))
+			{
+				bool need_correct = false;
+				hex_color basic_color = color(end);
+				(*MyAccess)(end)->set_color(color(start));
+				if (get_unit_type(end) == game_module::unit_type::capital)
+				{
+					MyAccess->get_player(basic_color)->remove_capital(end);
+					need_correct = true;
+				}
+				(*MyAccess)(end)->set_hex_unit((*MyAccess)(start)->get_hex_unit());
+				static_cast<Army *>((*MyAccess)(end)->get_hex_unit())->set_moved(true);
+				(*MyAccess)(start)->remove_hex_unit();
+				hex_color new_color = color(start);
+				std::vector<std::set<Pair>> to_correct = hexs_to_correct(end, new_color);
+				if (!to_correct[1].empty())
+				{
+					correct_capital(end);
+				}
+				if (basic_color != blank)
+				{
+					to_correct = hexs_to_correct(end, basic_color);	
+					if (need_correct || !to_correct[1].empty() || to_correct[0].size() == 1)
+					{
+						for (size_type i = 0; i < 3; ++i)
+						{
+							if (!to_correct[i].empty())
+							{
+								correct_capital(*to_correct[i].begin());
+							}
+						}
+					}
+				}
+ 			}
 			return true;
 		}
-		return false;
 	}
 
-	bool Controller::buy_tower(Pair hex, size_type strength)
+	bool Controller::buy_tower(const Pair & hex, size_type strength)
 	{
-		if (strength < 1 || strength > 2)
-			return false;
-		if ((*MyAccess)(hex)->get_hex_capital()->district_money() - get_tower_cost(strength) >= 0)
+		if (!can_place_static(hex)
+			|| strength < 1
+			|| strength > 2
+			|| get_district_money(hex) - get_tower_cost(strength) < 0)
 		{
-			(*MyAccess)(hex)->remove_hex_unit(); //!
-			Unit * new_tower = new Tower((*MyAccess)(hex), strength);
+			return false;
+		}
+		else
+		{
+			(*MyAccess)(hex)->set_hex_unit(unit_factory(tower, strength));
 			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_tower_cost(strength));
+			get_capital(hex)->change_district_income(-get_tower_cost(strength));
 			return true;
 		}
-		return false;
 	}
 
-	bool Controller::buy_farm(Pair hex)
+	bool Controller::buy_farm(const Pair & hex)
 	{
-		if ((*MyAccess)(hex)->get_hex_capital()->district_money() - get_farm_cost(hex) >= 0)
+		hex_color basic_color = color(hex);
+		if (!can_place_static(hex)
+			|| get_district_money(hex) - get_farm_cost(hex) < 0
+			|| !MyAccess->get_game_map().get_neighbours_exist(hex,
+				[basic_color](hex_color color) { return color == basic_color; },
+				[](unit_type type) { return (type == game_module::unit_type::farm
+					|| type == game_module::unit_type::capital); }))
 		{
-			(*MyAccess)(hex)->remove_hex_unit(); //!
-			Unit * new_tower = new Farm((*MyAccess)(hex));
-			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_farm_cost(hex));
-			return true;
-		}
-		return false;
-	}
-
-	bool Controller::buy_army(Pair hex, size_type strength)
-	{
-		if (strength < 1 || strength > 4)
 			return false;
-		if ((*MyAccess)(hex)->get_hex_capital()->district_money() - get_army_cost(strength) >= 0)
+		}
+		else
 		{
-			(*MyAccess)(hex)->remove_hex_unit(); //!
-			Unit * new_tower = new Army((*MyAccess)(hex), strength);
-			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_army_cost(strength));
+			(*MyAccess)(hex)->set_hex_unit(unit_factory(farm));
+			get_capital(hex)->change_farms_number(1);
+			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_farm_cost(hex));
+			get_capital(hex)->change_district_income(Farm::income());
 			return true;
 		}
-		return false;
-
 	}
 
-	size_type Controller::get_district_income(Pair hex) const
+	bool Controller::buy_army(const Pair & hex, size_type strength)
 	{
-		size_type result = 0;
-
-		result += MyAccess->get_game_map().easy_solve_maze(hex).size();
-		result += 4 * (get_district_units(hex, farm).size());
-		result -= 2 * (get_district_static(hex).size());
-
-		for (auto & i : get_district_units(hex, army))
+		if (!can_place_army(hex, strength)
+			|| get_district_money(hex) - get_army_cost(strength) < 0)
 		{
-			result -= (static_cast<Army *>((*MyAccess)(hex)->get_hex_unit()))->cost();
+			return false;
 		}
-
-		for (auto & i : get_district_units(hex, tower))
+		else
 		{
-			result -= (static_cast<Tower *>((*MyAccess)(hex)->get_hex_unit()))->cost();
+			if (get_unit_type(hex) == army)
+			{
+				static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())
+					->set_strength(strength + get_unit_strength(hex));
+				get_capital(hex)->change_district_income(
+					2 * pow(3, get_unit_strength(hex) - 1));
+				get_capital(hex)->change_district_income(
+					- 2 * pow(3, strength + get_unit_strength(hex) - 1));
+			}
+			else
+			{
+				bool change_moved = false;
+				if (is_static(get_unit_type(hex)))
+				{
+					get_capital(hex)->change_district_income(2);
+					change_moved = true;
+				}
+				(*MyAccess)(hex)->set_hex_unit(unit_factory(army, strength));
+				if (change_moved)
+				{
+					static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())->set_moved(true);
+				}
+				get_capital(hex)->change_district_income(- 2 * pow(3, strength - 1));
+			}		
+			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_army_cost(strength));
+			return true;	
 		}
-
-		return result;
-
 	}
 
-	size_type Controller::get_farm_cost(Pair hex) const
+	size_type Controller::get_district_income(const Pair & hex) const
 	{
-		return 12 + 2 * get_district_units(hex, farm).size();
+		return get_capital(hex)->district_income();
+	}
+
+	size_type Controller::get_farm_cost(const Pair & hex) const
+	{
+		return 12 + 2 * get_capital(hex)->farms_number();
 	}
 
 	size_type Controller::get_army_cost(size_type strength) const
 	{
-		if (strength > 0, strength < 5)
+		if (strength > 0 && strength < 5)
+		{
 			return 10 * strength;
+		}
 		return 0;
 	}
 
 	size_type Controller::get_tower_cost(size_type strength) const
 	{
 		if (strength == 1)
+		{
 			return 15;
+		}
 		if (strength == 2)
+		{
 			return 35;
+		}
 		return 0;
 	}
 
-	std::vector<Pair> Controller::get_army_list(Pair hex) const
+	std::vector<Pair> Controller::get_army_list(const Pair & hex) const
 	{
-
 		std::vector<Pair> result;
-
-		for (auto & i : get_district_units(hex, army))
+		for (auto & i : get_district_units(hex, game_module::unit_type::army))
 		{
-			if (!(static_cast<Army *>((*MyAccess)(i)->get_hex_unit()))->moved())
+			if (!static_cast<Army *>(get_unit(i))->moved())
+			{
 				result.push_back(i);
+			}
 		}
-
 		return result;
-
 	}
 
-	
+	Unit * Controller::get_unit(const Pair & hex) const
+	{
+		if ((*MyAccess)(hex)->occupied())
+		{
+			return (*MyAccess)(hex)->get_hex_unit();
+		}
+		return nullptr;
+	}
+
+	Capital * Controller::get_capital(const Pair & hex) const
+	{
+		return (*MyAccess)(hex)->get_hex_capital();
+	}
+
+	void Controller::correct_capital(const Pair & hex)
+	{		
+		std::vector<Pair> district(MyAccess->get_game_map().solve_maze(hex));			
+		if (district.size() == 1)
+		{
+			if (is_player_unit(get_unit_type(hex)))
+			{
+				if (get_unit_type(hex) == game_module::unit_type::capital)
+				{
+					MyAccess->get_player(color(hex))->remove_capital(hex);
+				}
+				(*MyAccess)(hex)->remove_hex_unit();
+			}
+			(*MyAccess)(hex)->set_hex_capital(nullptr);
+			return;
+		}
+		std::vector<Pair> district_capitals;
+		for (auto & i : district)
+		{
+			if (get_unit_type(i) == game_module::unit_type::capital)
+			{
+				district_capitals.push_back(i);
+			}
+		}
+		Pair new_capital(hex);
+		if (district_capitals.size() == 0)
+		{		
+			new_capital = hex;	
+			if (is_player_unit(get_unit_type(new_capital)))
+			{
+				for (auto & i : district)
+				{
+					if (is_ready_to_take(get_unit_type(i)))
+					{
+						new_capital = i;
+						break;
+					}
+					if (is_player_unit(get_unit_type(new_capital))
+						&& get_unit(new_capital)->cost()
+						> get_unit(i)->cost())
+					{
+						new_capital = i;
+					}
+				}
+			}			
+			(*MyAccess)(new_capital)->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
+			MyAccess->get_player(color(hex))->add_capital(new_capital);
+		}
+		else if (district_capitals.size() > 1)
+		{		
+			new_capital = district_capitals[0];
+			for (auto & i : district_capitals)
+			{
+				if (i == new_capital)
+				{
+					continue;
+				}
+				MyAccess->get_player(color(hex))->remove_capital(i);
+				static_cast<Capital *>((*MyAccess)(new_capital)->get_hex_unit())
+					->change_district_money(get_district_money(i));
+				(*MyAccess)(i)->delete_hex_unit();
+			}
+		}	
+		for (auto & i : district)
+		{
+			(*MyAccess)(i)->set_hex_capital((*MyAccess)(new_capital));
+		}
+		if (district.size() > 1)
+		{
+			calculate_income(district);
+		}	
+	}
+
+	std::vector<std::set<Pair>> Controller::hexs_to_correct(const Pair & hex,
+		hex_color color) const
+	{
+		std::vector<std::set<Pair>> result;
+		result.resize(3);
+		std::vector<Pair> neighbours_vec = MyAccess->get_game_map().get_neighbours(hex, 
+			[color](hex_color check_color) { return check_color == color; });
+		std::set<Pair> neighbours;
+		for (auto & i : neighbours_vec)
+		{
+			neighbours.insert(i);
+		}
+		if (neighbours.size() > 0)
+		{
+			for (size_type i = 0; i < 3; ++i)
+			{
+				for (auto j = neighbours.begin(); j != neighbours.end();)
+				{
+					bool stop = false;
+					if (result[i].empty())
+					{
+						result[i].insert(*j);
+						neighbours.erase(j++);
+						--i;
+						break;
+					}
+					else
+					{
+						for (auto & k : result[i])
+						{
+							if (get_distance(*j, k) == 1
+								&& (result[i].find(*j) == result[i].end()))
+							{
+								result[i].insert(*j);
+								neighbours.erase(j++);
+								stop = true;
+								--i;
+								break;
+							}
+							if (stop)
+							{
+								break;
+							}
+						}
+					}
+					if (!stop)
+					{
+						++j;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	void Controller::calculate_income(const std::vector<Pair> & district)
+	{
+		size_type result = 0;
+		size_type farms_number = 0;
+		for (auto & i : district)
+		{
+			++result;
+			if (is_static(get_unit_type(i)))
+			{
+				result -= 2;
+			}
+			else if (is_player_unit(get_unit_type(i)))
+			{
+				if (is_farm(get_unit_type(i)))
+				{
+					result += Farm::income();
+					++farms_number;
+				}
+				else if (is_army(get_unit_type(i)) || is_tower(get_unit_type(i)))
+				{
+					result -= get_unit(i)->cost();
+				}
+			}
+		}
+		/*
+		size_type result = 0;
+		if (!district.empty())
+		{
+			Pair hex = district[0];
+			result += MyAccess->get_game_map().easy_solve_maze_count(hex);
+			result += 4 * MyAccess->get_game_map().easy_solve_maze_count(hex, is_farm);
+			result -= 2 * MyAccess->get_game_map().easy_solve_maze_count(hex, is_static);
+			for (auto & i : get_district_units(hex, army))
+			{
+				result -= get_unit(i)->cost();
+			}
+			for (auto & i : get_district_units(hex, tower))
+			{
+				result -= get_unit(i)->cost();
+			}
+		}
+		*/
+		get_capital(district[0])->change_district_income(
+			-get_capital(district[0])->district_income());
+		get_capital(district[0])->change_district_income(result);
+		get_capital(district[0])->change_farms_number(
+			-get_capital(district[0])->farms_number());
+		get_capital(district[0])->change_farms_number(farms_number);
+	}
 }

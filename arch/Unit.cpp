@@ -6,45 +6,85 @@
 namespace game_module
 {
 
-
-		Unit::~Unit()
-		{
-			delete Field;
-		}
-
 		Unit::Unit(Hex * hex)
 			: Field(hex)
 		{ }
-
 
 		Pair Unit::coordinates() const
 		{
 			return Field->coordinates();
 		}
 
-		size_type Unit::index() const
+		hex_color Unit::color() const
 		{
-			return Field->index();
+			return Field->color();
 		}
 
 		void Unit::set_hex(Hex * hex)
 		{
-			if (hex->occupied())
-				hex->delete_hex_unit();
 			Field = hex;
-			hex->set_hex_unit(this);
 		}
 
-	
+		Unit * unit_factory(unit_type type, size_type strength)
+		{
+			Unit * result = nullptr;
+			switch (type)
+			{
+			case game_module::unit_type::none:
+				break;
+			case game_module::unit_type::army:
+			{
+				if (strength >= 1 && strength <= 4)
+				{
+					result = new Army(nullptr, strength);
+				}
+				break;
+			}
+			case game_module::unit_type::tower:
+			{
+				if (strength >= 1 && strength <= 2)
+				{
+					result = new Tower(nullptr, strength);
+				}
+				break;
+			}
+			case game_module::unit_type::capital:
+			{
+				if (strength == 1)
+				{
+					result = new Capital(nullptr);
+				}
+				break;
+			}
+			case game_module::unit_type::farm:
+			{
+				result = new Farm(nullptr);
+				break;
+			}
+			case game_module::unit_type::palm:
+			{
+				result = new Palm(nullptr);
+				break;
+			}
+			case game_module::unit_type::pine:
+			{
+				result = new Pine(nullptr);
+				break;
+			}
+			case game_module::unit_type::grave:
+			{
+				result = new Grave(nullptr);
+				break;
+			}
+			default:
+				break;
+			}	
+			return result;
+		}
 
-
-	//Unit * unit_factory(unit_type type, size_type strength = 0);
-	// в случае недопустимого значения силы возвращает nullptr
-
-
-		ActiveUnit::ActiveUnit(Hex * hex, size_type strng)
+		ActiveUnit::ActiveUnit(Hex * hex, size_type strength)
 			: Unit(hex)
-			, Strength(strng)
+			, Strength(strength)
 		{ }
 
 		size_type  ActiveUnit::strength() const
@@ -52,78 +92,14 @@ namespace game_module
 			return Strength;
 		}
 
-
-		Unit * unit_factory(unit_type type, Hex * hex, size_type strength)
-		{
-
-			Unit * result = nullptr;
-
-			Unit * previous_unit = nullptr;
-			if (hex->occupied())
-				previous_unit = hex->get_hex_unit();
-
-
-			switch (type)
-			{
-			case game_module::unit_type::none:
-				break;
-			case game_module::army:
-			{
-				if (strength >= 1 && strength <= 4)
-					result = new Army(hex, strength);
-				break;
-			}
-			case game_module::tower:
-			{
-				if (strength >= 1 && strength <= 2)
-					result = new Tower(hex, strength);
-				break;
-			}
-			case game_module::capital:
-			{
-				if (strength == 1)
-					result = new Capital(hex);
-				break;
-			}
-			case game_module::farm:
-			{
-				result = new Farm(hex);
-				break;
-			}
-			case game_module::palm:
-			{
-				result = new Palm(hex);
-				break;
-			}
-			case game_module::pine:
-			{
-				result = new Pine(hex);
-				break;
-			}
-			case game_module::grave:
-			{
-				result = new Grave(hex);
-				break;
-			}
-			default:
-				break;
-			}
-
-			if (result)
-				delete previous_unit;
-
-			return result;
-
-		}
-
-
-		Army::Army(Hex * hex, size_type strng)
-			: ActiveUnit(hex, strng)
+		Army::Army(Hex * hex, size_type strength)
+			: ActiveUnit(hex, strength)
+			, Moved(false)
 		{ }
 
 		unit_type Army::type() const
 		{
-			return army;
+			return game_module::unit_type::army;
 		}
 
 		bool Army::moved() const
@@ -141,9 +117,9 @@ namespace game_module
 			return 6;
 		}
 
-		void Army::set_strength(size_type strng)
+		void Army::set_strength(size_type strength)
 		{
-			Strength = strng;
+			Strength = strength;
 		}
 
 		void Army::set_moved(bool moved)
@@ -153,43 +129,42 @@ namespace game_module
 
 		void Army::die() // создает могилу на гексе, применяется при нехватке снабжения
 		{
-			Grave * grave = new Grave(Field);
-			Field->set_hex_unit(grave);
-			this->~Army();
+			Field->set_hex_unit(unit_factory(game_module::unit_type::grave));
 		}
 
-
-
-		Tower::Tower(Hex * hex, size_type strng)
-			: ActiveUnit(hex, strng)
+		Tower::Tower(Hex * hex, size_type strength)
+			: ActiveUnit(hex, strength)
 		{ }
 
 		unit_type Tower::type() const
 		{
-			return tower;
+			return game_module::unit_type::tower;
 		}
 		
 		size_type Tower::cost() const
 		{
 			if (Strength == 1)
+			{
 				return 2;
+			}
 			return 7;
 		}
 
-
-
 		Capital::Capital(Hex * hex)
 			: ActiveUnit(hex, 1)
+			, DistrictMoney(0)
+			, DistrictIncome(0)
+			, FarmsNumber(0)
 		{ }
 
 		unit_type Capital::type() const
 		{
-			return capital;
+			return game_module::unit_type::capital;
 		}
 
-		size_type Capital::district_index() const
+		size_type Capital::cost() const
 		{
-			return DistrictIndex;
+			return 99;
 		}
 
 		size_type Capital::district_money() const
@@ -197,26 +172,60 @@ namespace game_module
 			return DistrictMoney;
 		}
 
-		void Capital::set_district_index(size_type new_index)
+		size_type Capital::district_income() const
 		{
-			DistrictIndex = new_index;
+			return DistrictIncome;
 		}
 
-		bool Capital::change_district_money(int money)  // прибавляет money к DistrictMoney,
-											   // если получается меньше 0, приравнивает DistrictMoney к нулю
-											   // и возвращает false
+		size_type Capital::farms_number() const
 		{
+			return FarmsNumber;
+		}
 
-			if (money < 0 && abs(money) > DistrictMoney) {
+		bool Capital::change_district_money(size_type money)
+		{
+			if (money < 0 && abs(money) > DistrictMoney) 
+			{
 				DistrictMoney = 0;
 				return false;
 			}
-
 			DistrictMoney += money;
 			return true;
-
 		}
 
+		void Capital::change_district_income(size_type income)
+		{
+			DistrictIncome += income;
+		}
+
+		void Capital::change_district_income(Hex * hex)
+		{
+			if (hex->get_hex_capital() == this)
+			{
+				DistrictIncome -= 1;
+				if (is_static(hex->get_hex_unit_type()))
+				{
+					DistrictIncome += 2;
+				}
+				else if (is_player_unit(hex->get_hex_unit_type()))
+				{
+					if (is_farm(hex->get_hex_unit_type()))
+					{
+						DistrictIncome -= Farm::income();
+					}
+					else if (is_army(hex->get_hex_unit_type()) 
+						|| is_tower(hex->get_hex_unit_type()))
+					{
+						DistrictIncome += hex->get_hex_unit()->cost();
+					}
+				}
+			}
+		}
+
+		void Capital::change_farms_number(size_type number)
+		{
+			FarmsNumber += number;
+		}
 
 		PassiveUnit::PassiveUnit(Hex * hex)
 			: Unit(hex)
@@ -227,15 +236,18 @@ namespace game_module
 			return 0;
 		}
 
-
-
 		Farm::Farm(Hex * hex)
 			: PassiveUnit(hex)
 		{ }
 
 		unit_type Farm::type() const
 		{
-			return farm;
+			return game_module::unit_type::farm;
+		}
+
+		size_type Farm::cost() const
+		{
+			return 12;
 		}
 
 		size_type Farm::income()
@@ -243,11 +255,15 @@ namespace game_module
 			return 4;
 		}
 
-
 		Tree::Tree(Hex * hex)
 			: PassiveUnit(hex)
+			, TurnsFromDouble(0)
 		{ }
 
+		size_type Tree::cost() const
+		{
+			return 0;
+		}
 
 		bool Tree::ready_to_double() const
 		{
@@ -264,24 +280,19 @@ namespace game_module
 			++TurnsFromDouble;
 		}
 
-
-
-
 		Palm::Palm(Hex * hex)
 			: Tree(hex)
 		{ }
 
 		size_type Palm::turns_to_double() const // возвращает срок за который размножается данный тип
 		{
-			return 0;
+			return 1;
 		}
 
 		unit_type Palm::type() const
 		{
-			return palm;
+			return game_module::unit_type::palm;
 		}
-
-
 
 		Pine::Pine(Hex * hex)
 			: Tree(hex)
@@ -289,15 +300,13 @@ namespace game_module
 
 		size_type Pine::turns_to_double() const // возвращает срок за который размножается данный тип
 		{
-			return 2;
+			return 3;
 		}
 
 		unit_type Pine::type() const
 		{
-			return pine;
+			return game_module::unit_type::pine;
 		}
-
-
 
 		Grave::Grave(Hex * hex)
 			: PassiveUnit(hex)
@@ -305,7 +314,11 @@ namespace game_module
 
 		unit_type Grave::type() const
 		{
-			return grave;
+			return game_module::unit_type::grave;
 		}
 
+		size_type Grave::cost() const
+		{
+			return 0;
+		}
 }

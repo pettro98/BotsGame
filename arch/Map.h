@@ -3,114 +3,81 @@
 #include "General.h"
 #include "Hex.h"
 #include <set>
-
+#include <functional>
 
 
 namespace game_module
 {
-
-
 	class Map
 	{
-
 	private:
-
 		Hex *** Root; // указатель на двумерный массив гексов
-		size_type Dimension; // размерность карты
-		std::string MapType; // тип карты
-
+		size_type Dimension;
+		std::string MapType;
 	public:
-
-		~Map() = default; // вызывает метод clear
-
+		~Map();
 		Map() = default;
-
-		Map(size_type dimension = 10,
-			size_type player_number = 6,
+		Map(size_type dimension = 19,
+			size_type player_number = 4,
 			const std::string & map_type = "classic");
-
-		Map(const Map & map);
-
-
-		//Map(const Map & map);
-
-		//Map & operator = (const Map & map);
-
-
-		// базовые конструкторы, операторы
 		Map(Map && map) = delete;
 		Map & operator = (Map && map) = delete;
-		//
-
 		size_type dimension() const;
-
 		std::string map_type() const;
-
-		Hex & operator () (const Pair & pair);
-
-		Hex operator () (const Pair & pair) const;
-
-		Hex & operator () (size_type coord1, size_type coord2);
-
-		Hex operator () (size_type coord1, size_type coord2) const;
-
-
-		//void clear(); // очищает карту, в том числе удаляет всех юнитов на ней
-
-		
-		std::vector<Pair> get_neighbours(size_type coord1, size_type coord2) const;
-
-		std::vector<Pair> get_neighbours(Pair hex) const;
-
-		std::vector<Pair> get_exist_neighbours(size_type coord1, size_type coord2) const;
-
-		std::vector<Pair> get_exist_neighbours(Pair hex) const;
-		
-		std::vector<Pair> Map::get_district_border_hexs(const Pair & hex);
-
-		std::vector<Pair> easy_solve_maze(const Pair & hex) const;
-
-		std::vector<Pair> Map::solve_maze(const Pair & hex);
-
+		Hex * operator () (const Pair & hex) const;
+		Hex * operator () (size_type coord1, size_type coord2) const;
+		hex_color color(const Pair & hex) const;
+		unit_type type(const Pair & hex) const;
+		bool hex_exist(const Pair & hex) const;
+		void clear();
+		bool get_neighbours_exist(size_type coord1, size_type coord2,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		bool get_neighbours_exist(const Pair & hex,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_neighbours(size_type coord1, size_type coord2,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_neighbours(const Pair & hex,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_hex_row(const Pair & hex, size_type radius,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		bool get_hex_row_exist(const Pair & hex, size_type radius,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_district_border_hexs(const Pair & hex);
+		std::vector<Pair> district_units(const Pair & hex, std::function<bool(unit_type)> compare) const;
+		std::vector<Pair> easy_solve_maze(const Pair & hex,
+			std::function <bool(unit_type)> compare = [](unit_type type) { return true; }) const;
+		size_type easy_solve_maze_count(const Pair & hex,
+			std::function <bool(unit_type)> compare = [](unit_type type) { return true; }) const;
+		std::vector<Pair> solve_maze(const Pair & hex);
 	private:
-
-		void generate_map( // вспомогательный метод, генерирующий карту, вызывается в конструкторе
-			size_type dimension = 10, size_type player_number = 6,
-			const std::string & map_type = "classic"
-		);
-
-
+		void generate_map(size_type player_number = 4);
+		bool hex_acceptable(const Pair & hex,
+		std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+		std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
 	};
-
 
 	void print_map(const Map & map);
 
-
 	struct HexImpress
 	{
-
 		Pair Coordinates;
 		hex_color Color;
 		unit_type UnitType;
-
 		HexImpress(const Hex & hex);
-
 	};
-
-
 
 	struct MapImpress
 	{
-
 		HexImpress *** Root;
 		size_type Dimension;
-
 		~MapImpress();
-
 		MapImpress(const Map & map);
-
 		HexImpress & operator () (const Pair & pair);
-
 	};
-
 }
