@@ -66,19 +66,13 @@ namespace game_module
 	bool is_color(hex_color color);
 	bool is_black(hex_color color);
 	bool is_blank(hex_color color);
-	bool is_red(hex_color color);
-	bool is_green(hex_color color);
-	bool is_orange(hex_color color);
-	bool is_purple(hex_color color);
-	bool is_blue(hex_color color);
-	bool is_yellow(hex_color color);
 	bool is_extra(hex_color color);
 	bool is_player_color(hex_color color);
 
 	struct Result
 	{
 	public:
-		size_type winner = 0;
+		size_type winner;
 		std::vector<size_type> points;
 		std::vector<size_type> last_turn;
 		std::vector<size_type> built_armies;

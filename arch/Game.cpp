@@ -39,16 +39,6 @@ namespace game_module
 		return true;			
 	}
 
-	Hex * Game::get_hex(const Pair & hex)
-	{
-		return (*GameMap)(hex);
-	}
-
-	Hex * Game::get_hex(size_type coord1, size_type coord2)
-	{
-		return (*GameMap)(Pair(coord1, coord2));
-	}
-
 	Hex * Game::operator () (const Pair & hex)
 	{ 
 		return (*GameMap)(hex);

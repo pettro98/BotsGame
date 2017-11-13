@@ -21,7 +21,7 @@ int main()
 	SetConsoleScreenBufferSize(out_handle, maxWindow);
 	SetConsoleWindowInfo(out_handle, true, &srctWindow);
 
-	Game game(30, 19, "classic");
+	Game game(50, 19, "classic");
 	Controller controller(&game);
 	TestBot bot1(game_module::hex_color::red, "red");
 	TestBot bot2(game_module::hex_color::green, "green");

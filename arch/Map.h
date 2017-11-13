@@ -16,12 +16,9 @@ namespace game_module
 		std::string MapType;
 	public:
 		~Map();
-		Map() = default;
 		Map(size_type dimension = 19,
 			size_type player_number = 4,
 			const std::string & map_type = "classic");
-		Map(Map && map) = delete;
-		Map & operator = (Map && map) = delete;
 		size_type dimension() const;
 		std::string map_type() const;
 		Hex * operator () (const Pair & hex) const;
@@ -49,7 +46,6 @@ namespace game_module
 			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
 			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
 		std::vector<Pair> get_district_border_hexs(const Pair & hex);
-		std::vector<Pair> district_units(const Pair & hex, std::function<bool(unit_type)> compare) const;
 		std::vector<Pair> easy_solve_maze(const Pair & hex,
 			std::function <bool(unit_type)> compare = [](unit_type type) { return true; }) const;
 		size_type easy_solve_maze_count(const Pair & hex,

@@ -30,7 +30,18 @@ namespace game_module
 		virtual void turn() = 0;
 		hex_color color(const Pair & hex) const;
 		Pair capital(const Pair & hex) const;
-		std::vector<Pair> get_neighbours(const Pair & hex) const;
+		bool get_neighbours_exist(const Pair & hex,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_neighbours(const Pair & hex,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_hex_row(const Pair & hex, size_type radius,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		bool get_hex_row_exist(const Pair & hex, size_type radius,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
 		size_type distance(const Pair & hex1, const Pair & hex2) const;
 		bool can_move(const Pair & hex1, const Pair & hex2, size_type move_points = Army::move_points()) const;
 		unit_type get_unit_type(const Pair & hex) const;

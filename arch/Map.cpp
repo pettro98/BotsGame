@@ -375,34 +375,6 @@ namespace game_module
 		return result;
 	}
 	
-	std::vector<Pair> Map::district_units(const Pair & hex, std::function<bool(unit_type)> compare) const
-	{
-		std::vector<Pair> result;
-		if ((*this)(hex)->get_hex_capital() == nullptr)
-		{
-			return result;
-		}
-		bool incomplete = true;
-		size_type radius = 0;
-		while (incomplete)
-		{
-			incomplete = false;
-			for (auto & i : get_hex_row(hex, radius))
-			{
-				if ((*this)(hex)->get_hex_capital() == (*this)(i)->get_hex_capital())
-				{
-					if (compare(type(i)))
-					{
-						result.push_back(i);
-					}
-					incomplete = true;
-				}
-			}
-			++radius;
-		}
-		return result;
-	}
-
 	std::vector<Pair> Map::easy_solve_maze(const Pair & hex,
 		std::function <bool(unit_type)> compare) const
 	{
@@ -418,12 +390,15 @@ namespace game_module
 		{
 			incomplete = false;
 			for (auto & i : get_hex_row(hex, radius,
-				[basic_color](hex_color color) { return color == basic_color; }, compare))
+				[basic_color](hex_color color) { return color == basic_color; }))
 			{
 				if ((*this)(hex)->get_hex_capital() == (*this)(i)->get_hex_capital())
 				{
+					if (compare(type(i)))
+					{
+						result.push_back(i);
+					}
 					incomplete = true;
-					result.push_back(i);
 				}
 			}
 			++radius;

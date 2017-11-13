@@ -19,7 +19,7 @@ namespace game_module
 		Capital * HexCapital; // указатель на столицу области
 	public:
 		~Hex();
-		Hex(size_type coord_1, size_type coord_2);
+		Hex(size_type coord1, size_type coord2);
 		Pair coordinates() const;
 		hex_color color() const;
 		unit_type get_hex_unit_type() const;
@@ -36,7 +36,4 @@ namespace game_module
 
 	bool operator != (const Hex & hex1, const Hex & hex2);
 	size_type get_distance(const Pair & hex1, const Pair & hex2);
-	size_type get_distance(const Hex & hex1, const Hex & hex2);
-	std::vector<Pair> get_hex_row(const Pair & hex, size_type radius, size_type dimension);
-	bool hex_exist(const Pair & hex, size_type dimension);
 }

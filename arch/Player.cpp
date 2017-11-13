@@ -2,8 +2,6 @@
 
 
 
-
-
 namespace game_module
 {
 
@@ -47,9 +45,32 @@ namespace game_module
 		return GameController->capital(hex);
 	}
 
-	std::vector<Pair> Player::get_neighbours(const Pair & hex) const
+	bool Player::get_neighbours_exist(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
 	{
-		return GameController->get_neighbours(hex);
+		return GameController->get_neighbours_exist(hex, compare1, compare2);
+	}
+	
+	std::vector<Pair> Player::get_neighbours(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2 ) const
+	{
+		return GameController->get_neighbours(hex, compare1, compare2);
+	}
+
+	std::vector<Pair> Player::get_hex_row(const Pair & hex, size_type radius,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_hex_row(hex, radius, compare1, compare2);
+	}
+
+	bool Player::get_hex_row_exist(const Pair & hex, size_type radius,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_hex_row_exist(hex, radius, compare1, compare2);
 	}
 
 	size_type Player::distance(const Pair & hex1, const Pair & hex2) const

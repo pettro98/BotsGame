@@ -22,9 +22,35 @@ namespace game_module
 		return Pair(0, 0);
 	}
 
-	std::vector<Pair> Controller::get_neighbours(const Pair & hex) const
+	bool Controller::get_neighbours_exist(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
 	{
-		return MyAccess->get_game_map().get_neighbours(hex);
+		return MyAccess->get_game_map().get_neighbours_exist(hex,
+			compare1, compare2);
+	}
+
+	std::vector<Pair> Controller::get_neighbours(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return MyAccess->get_game_map().get_neighbours(hex, compare1, compare2);
+	}
+
+	std::vector<Pair> Controller::get_hex_row(const Pair & hex, size_type radius,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return MyAccess->get_game_map().get_hex_row(hex, radius,
+			compare1, compare2);
+	}
+
+	bool Controller::get_hex_row_exist(const Pair & hex, size_type radius,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return MyAccess->get_game_map().get_hex_row_exist(hex, radius,
+			compare1, compare2);
 	}
 
 	size_type Controller::distance(const Pair & hex1, const Pair & hex2) const
@@ -180,7 +206,7 @@ namespace game_module
 
 	std::vector<Pair> Controller::get_district_units(const Pair & hex, unit_type seek_type) const
 	{
-		return MyAccess->get_game_map().district_units(hex,
+		return MyAccess->get_game_map().easy_solve_maze(hex,
 			[seek_type](unit_type type) { return type == seek_type; } );
 	}
 
@@ -212,7 +238,7 @@ namespace game_module
 
 	std::vector<Pair> Controller::get_district_static(const Pair & hex) const
 	{
-		return MyAccess->get_game_map().district_units(hex, is_static);
+		return MyAccess->get_game_map().easy_solve_maze(hex, is_static);
 	}
 
 	std::vector<Pair> Controller::get_br_static(const Pair & hex) const
