@@ -12,18 +12,25 @@ namespace game_module
 		clear();
 	}
 
-	Map::Map(size_type dimension,
-			size_type player_number,
-			const std::string & map_type)
-			: Dimension(dimension)
+	Map::Map(size_type dimension_x,
+		size_type dimension_y,
+		size_type player_number,
+		const std::string & map_type)
+			: DimensionX(dimension_x)
+			, DimensionY(dimension_y)
 			, MapType(map_type)
 	{
 		generate_map(player_number);
 	}
 
-	size_type Map::dimension() const
+	size_type Map::dimension_x() const
 	{
-		return Dimension;
+		return DimensionX;
+	}
+
+	size_type Map::dimension_y() const
+	{
+		return DimensionY;
 	}
 
 	std::string Map::map_type() const
@@ -33,12 +40,16 @@ namespace game_module
 
 	Hex * Map::operator () (const Pair & hex) const
 	{
-		return Root[hex.First][hex.Second];
+		return (*this)(hex.First, hex.Second);
 	}
 
 	Hex * Map::operator () (size_type coord1, size_type coord2) const
 	{
-		return Root[coord1][coord2];
+		if (coord1 < DimensionX && coord1 >= 0 && coord2 < DimensionY && coord2 >= 0)
+		{
+			return Root[coord1][coord2];
+		}
+		return nullptr;
 	}
 
 	hex_color Map::color(const Pair & hex) const
@@ -53,15 +64,15 @@ namespace game_module
 
 	bool Map::hex_exist(const Pair & hex) const
 	{
-		return (hex.First > 0 && hex.Second > 0 && hex.First < Dimension - 1 
-			&& hex.Second < Dimension - 1);
+		return (hex.First > 0 && hex.Second > 0 && hex.First < DimensionX - 1 
+			&& hex.Second < DimensionY - 1);
 	}
 
 	void Map::clear()
 	{
-		for (size_type i = 0; i < Dimension; ++i)
+		for (size_type i = 0; i < DimensionX; ++i)
 		{
-			for (size_type j = 0; j < Dimension; ++j)
+			for (size_type j = 0; j < DimensionY; ++j)
 			{
 				delete Root[i][j];
 			}
@@ -339,17 +350,39 @@ namespace game_module
 		return false;
 	}
 
-	std::vector<Pair> Map::get_district_border_hexs(const Pair & hex)
+	std::vector<Pair> Map::get_internal_border(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		std::vector<Pair> result;
+		hex_color basic_color = color(hex);
+		for (auto & i : easy_solve_maze(hex))
+		{
+			if (get_neighbours_exist(i, 
+				[basic_color](hex_color color) { return color != basic_color; },
+				compare))
+			{
+				result.push_back(i);
+			}
+		}
+		return result;
+	}
+
+	std::vector<Pair> Map::get_external_border(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
 	{
 		std::vector<Pair> result;
 		bool incomplete = true;
 		size_type radius = 1;
 		hex_color basic_color = color(hex);
+		if (compare1(color(hex)))
+		{
+			compare1 = [basic_color](hex_color color) { return color != basic_color; };
+		}
 		while (incomplete)
 		{
 			incomplete = false;
-			for (auto & i : get_hex_row(hex, radius,
-				[basic_color](hex_color color) { return color != basic_color; }))
+			for (auto & i : get_hex_row(hex, radius, compare1, compare2))
 			{
 				for (auto & j : get_neighbours(i,
 					[basic_color](hex_color color) { return color == basic_color; }))
@@ -456,44 +489,42 @@ namespace game_module
 				[basic_color](hex_color color) { return color == basic_color; }));
 			for (auto & i : row)
 			{
-				if (map_impress(i).Color != game_module::hex_color::extra)
-				{
-					for (auto & j : get_neighbours(i, is_player_color))
-					{
-						if (map_impress(j).Color == game_module::hex_color::extra)
-						{
-							map_impress(i).Color = game_module::hex_color::extra;
-							result.push_back(i);
-							incomplete = true;
-							break;
-						}
-					}
-				}	
-			}
-			for (auto i = row.rbegin(); i != row.rend(); ++i)
-			{
-				if (map_impress(*i).Color != game_module::hex_color::extra)
-				{
-					for (auto & j : get_neighbours(*i, is_player_color))
-					{
-						if (map_impress(j).Color == game_module::hex_color::extra)
-						{
-							map_impress(*i).Color = game_module::hex_color::extra;
-							result.push_back(*i);
-							incomplete = true;
-							break;
-						}
-					}
-				}
-			}	
-			for (auto & i : row)
-			{
 				if (is_extra(map_impress(i).Color))
 				{
 					find = true;
-					break;
+					continue;
+				}
+				for (auto & j : get_neighbours(i,
+					[basic_color](hex_color color) { return color == basic_color; }))
+				{
+					if (is_extra(map_impress(j).Color))
+					{
+						map_impress(i).Color = game_module::hex_color::extra;
+						result.push_back(i);
+						incomplete = true;
+						break;
+					}
 				}
 			}
+			for (auto i = row.rbegin(); i != row.rend(); ++i)
+			{
+				if (is_extra(map_impress(*i).Color))
+				{
+					find = true;
+					continue;
+				}
+				for (auto & j : get_neighbours(*i,
+					[basic_color](hex_color color) { return color == basic_color; }))
+				{
+					if (is_extra(map_impress(j).Color))
+					{
+						map_impress(*i).Color = game_module::hex_color::extra;
+						result.push_back(*i);
+						incomplete = true;
+						break;
+					}
+				}
+			}	
 			if (incomplete)
 			{
 				--radius;
@@ -508,21 +539,21 @@ namespace game_module
 	
 	void Map::generate_map(size_type player_number)
 	{
-		Hex *** root = new Hex **[Dimension];
-		for (size_type i = 0; i < Dimension; ++i)
+		Hex *** root = new Hex **[DimensionX];
+		for (size_type i = 0; i < DimensionX; ++i)
 		{
-			root[i] = new Hex *[Dimension];
-			for (size_type j = 0; j < Dimension; ++j)
+			root[i] = new Hex *[DimensionY];
+			for (size_type j = 0; j < DimensionY; ++j)
 			{
 				root[i][j] = new Hex(i, j);
-				if (i * j == 0 || i >= Dimension - 1 || j >= Dimension - 1)
+				if (!hex_exist(Pair(i, j)))
 				{
 					root[i][j]->set_color(game_module::hex_color::black);
 				}
 			}
 		}
 		Root = root;
-		if (Dimension == 19 && MapType == "classic")
+		if (MapType == "classic")
 		{
 			(*this)(Pair(3, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
 			(*this)(Pair(3, 3))->set_color(red);
@@ -532,67 +563,41 @@ namespace game_module
 				(*this)(i)->set_color(red);
 				(*this)(i)->set_hex_capital((*this)(Pair(3, 3)));
 			}
-			
-			(*this)(Pair(3, 15))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(3, 15))->set_color(game_module::hex_color::green);
-			(*this)(Pair(3, 15))->set_hex_capital((*this)(Pair(3, 15)));
-			for (auto & i : get_neighbours(Pair(3, 15)))
+			(*this)(Pair(3, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
+			(*this)(Pair(3, DimensionY - 4))->set_color(game_module::hex_color::green);
+			(*this)(Pair(3, DimensionY - 4))->set_hex_capital((*this)(Pair(3, DimensionY - 4)));
+			for (auto & i : get_neighbours(Pair(3, DimensionY - 4)))
 			{
 				(*this)(i)->set_color(game_module::hex_color::green);
-				(*this)(i)->set_hex_capital((*this)(Pair(3, 15)));
+				(*this)(i)->set_hex_capital((*this)(Pair(3, DimensionY - 4)));
 			}
-			(*this)(Pair(15, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(15, 3))->set_color(game_module::hex_color::orange);
-			(*this)(Pair(15, 3))->set_hex_capital((*this)(Pair(15, 3)));
-			for (auto & i : get_neighbours(Pair(15, 3)))
+			(*this)(Pair(DimensionX - 4, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
+			(*this)(Pair(DimensionX - 4, 3))->set_color(game_module::hex_color::orange);
+			(*this)(Pair(DimensionX - 4, 3))->set_hex_capital((*this)(Pair(DimensionX - 4, 3)));
+			for (auto & i : get_neighbours(Pair(DimensionX - 4, 3)))
 			{
 				(*this)(i)->set_color(game_module::hex_color::orange);
-				(*this)(i)->set_hex_capital((*this)(Pair(15, 3)));
+				(*this)(i)->set_hex_capital((*this)(Pair(DimensionX - 4, 3)));
 
 			}
-			(*this)(Pair(15, 15))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(15, 15))->set_color(game_module::hex_color::purple);
-			(*this)(Pair(15, 15))->set_hex_capital((*this)(Pair(15, 15)));
-			for (auto & i : get_neighbours(Pair(15, 15)))
+			(*this)(Pair(DimensionX - 4, DimensionY - 4))
+				->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
+			(*this)(Pair(DimensionX - 4, DimensionY - 4))
+				->set_color(game_module::hex_color::purple);
+			(*this)(Pair(DimensionX - 4, DimensionY - 4))
+				->set_hex_capital((*this)(Pair(DimensionX - 4, DimensionY - 4)));
+			for (auto & i : get_neighbours(Pair(DimensionX - 4, DimensionY - 4)))
 			{
 				(*this)(i)->set_color(game_module::hex_color::purple);
-				(*this)(i)->set_hex_capital((*this)(Pair(15, 15)));
+				(*this)(i)->set_hex_capital((*this)(Pair(DimensionX - 4, DimensionY - 4)));
 			}		
 			for (size_type i = 0; i < 3; ++i)
 			{
-				for (auto & j : get_hex_row(Pair(9, 9), i))
+				for (auto & j : get_hex_row(Pair(DimensionX / 2, DimensionY / 2), i))
 				{
 					(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::pine));
 				}
-			}			
-			/*for (size_type i = 0; i < 1; ++i)
-			{
-				for (auto & j : get_hex_row(Pair(3, 9), i))
-				{
-					(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::palm));
-				}
 			}
-			for (size_type i = 0; i < 1; ++i)
-			{
-				for (auto & j : get_hex_row(Pair(9, 3), i))
-				{
-					(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::palm));
-				}
-			}
-			for (size_type i = 0; i < 1; ++i)
-			{
-				for (auto & j : get_hex_row(Pair(9, 15), i))
-				{
-					(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::palm));
-				}
-			}
-			for (size_type i = 0; i < 1; ++i)
-			{
-				for (auto & j : get_hex_row(Pair(15, 9), i))
-				{
-					(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::palm));
-				}
-			}	*/	
 		}
 	}
 
@@ -607,11 +612,11 @@ namespace game_module
 	void print_map(const Map & map)
 	{
 		HANDLE hSTDOut = GetStdHandle(STD_OUTPUT_HANDLE);
-		int colors[8] = {0x0007, 0x0004, 0x0002, 0x0005, 0x0003, 0x0001, 0x0006, 0x0000 };
+		int colors[8] = {0x0007, 0x0004, 0x0002, 0x0003, 0x0005, 0x0001, 0x0006, 0x0000 };
 		char type[8] = {'0', '1', '2', 'C', 'f', '?', '?', 'G'};
-		for (size_type i = 0; i < map.dimension(); ++i)
+		for (size_type i = 0; i < map.dimension_y(); ++i)
 		{		
-			for (size_type j = 0; j < map.dimension(); ++j)
+			for (size_type j = 0; j < map.dimension_x(); ++j)
 			{
 				if (j % 2)
 				{
@@ -637,7 +642,7 @@ namespace game_module
 					}
 					else if (is_tower(map(j, i)->get_hex_unit_type()))
 					{
-						if (map(j, i)->get_hex_unit()->strength() == 1)
+						if (map(j, i)->get_hex_unit()->strength() == 2)
 						{
 							std::cout << 't';
 						}
@@ -653,7 +658,7 @@ namespace game_module
 					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
 					std::cout << char(0x5c);
 				}
-				if (j + 1 < map.dimension() && i - 1 >= 0)
+				if (j + 1 < map.dimension_x() && i - 1 >= 0)
 				{
 					if (map(j + 1, i - 1)->color() == black)
 					{
@@ -670,7 +675,7 @@ namespace game_module
 						}
 						else if (is_tower(map(j + 1, i - 1)->get_hex_unit_type()))
 						{
-							if (map(j + 1, i - 1)->get_hex_unit()->strength() == 1)
+							if (map(j + 1, i - 1)->get_hex_unit()->strength() == 2)
 							{
 								std::cout << 't';
 							}
@@ -691,7 +696,7 @@ namespace game_module
 				}
 			}
 			std::cout << std::endl;
-			for (size_type j = 0; j < map.dimension(); ++j)
+			for (size_type j = 0; j < map.dimension_x(); ++j)
 			{
 				if (j % 2)
 				{
@@ -718,7 +723,7 @@ namespace game_module
 					}
 					else if (is_tower(map(j, i)->get_hex_unit_type()))
 					{
-						if (map(j, i)->get_hex_unit()->strength() == 1)
+						if (map(j, i)->get_hex_unit()->strength() == 2)
 						{
 							std::cout << 't';
 						}
@@ -734,7 +739,7 @@ namespace game_module
 					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
 					std::cout << "/";
 				}
-				if (j + 1 < map.dimension())
+				if (j + 1 < map.dimension_x())
 				{
 					if (map(j + 1, i)->color() == black)
 					{
@@ -751,7 +756,7 @@ namespace game_module
 						}
 						else if (is_tower(map(j + 1, i)->get_hex_unit_type()))
 						{
-							if (map(j + 1, i)->get_hex_unit()->strength() == 1)
+							if (map(j + 1, i)->get_hex_unit()->strength() == 2)
 							{
 								std::cout << 't';
 							}
@@ -777,9 +782,9 @@ namespace game_module
 
 	MapImpress::~MapImpress()
 	{
-		for (size_type i = 0; i < Dimension; ++i)
+		for (size_type i = 0; i < DimensionX; ++i)
 		{
-			for (size_type j = 0; j < Dimension; ++j)
+			for (size_type j = 0; j < DimensionY; ++j)
 			{
 				delete Root[i][j];
 			}
@@ -789,13 +794,14 @@ namespace game_module
 	}
 
 	MapImpress::MapImpress(const Map & map)
-		: Dimension(map.dimension())
+		: DimensionX(map.dimension_x())
+		, DimensionY(map.dimension_y())
 	{
-		HexImpress *** root = new HexImpress **[Dimension];
-		for (size_type i = 0; i < Dimension; ++i)
+		HexImpress *** root = new HexImpress **[DimensionX];
+		for (size_type i = 0; i < DimensionX; ++i)
 		{
-			root[i] = new HexImpress *[Dimension];
-			for (size_type j = 0; j < Dimension; ++j)
+			root[i] = new HexImpress *[DimensionY];
+			for (size_type j = 0; j < DimensionY; ++j)
 			{
 				root[i][j] = new HexImpress(*map(Pair(i, j)));
 			}

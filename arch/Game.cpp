@@ -10,12 +10,13 @@ namespace game_module
 		delete GameMap;
 	}
 
-	Game::Game(size_type max_turns, size_type map_dimension, std::string map_type)
-		: CurrentPlayer(blank)
+	Game::Game(size_type max_turns, size_type dimension_x, size_type dimension_y
+		, std::string map_type)
+		: CurrentPlayer(game_module::hex_color::blank)
 		, CurrentTurn(0)
 		, MaxTurns(max_turns)
 	{
-		GameMap = new Map(map_dimension, 4, map_type);
+		GameMap = new Map(dimension_x, dimension_y, 4, map_type);
 	}
 
 	bool Game::check_end_game() const
@@ -51,7 +52,10 @@ namespace game_module
 
 	Unit * Game::get_unit(const Pair & hex)
 	{
-		return (*GameMap)(hex)->get_hex_unit();
+		if ((*GameMap)(hex) != nullptr)
+		{
+			return (*GameMap)(hex)->get_hex_unit();
+		}
 	}
 	
 	std::vector<Player *> & Game::get_players()
@@ -110,12 +114,18 @@ namespace game_module
 		
 	void Game::set_unit(const Pair & hex, Unit * unit)
 	{
-		(*GameMap)(hex)->set_hex_unit(unit);
+		if ((*GameMap)(hex) != nullptr)
+		{
+			(*GameMap)(hex)->set_hex_unit(unit);
+		}
 	}
 
 	void Game::set_color(const Pair & hex, hex_color new_color)
 	{
-		(*GameMap)(hex)->set_color(new_color);
+		if ((*GameMap)(hex) != nullptr)
+		{
+			(*GameMap)(hex)->set_color(new_color);
+		}
 	}
 
 	void Game::turn_passed()
@@ -168,14 +178,16 @@ namespace game_module
 		Players[0]->add_capital(Pair(3, 3));
 		static_cast<Capital *>(get_unit(Pair(3, 3)))->change_district_income(7);
 		Players[0]->set_controller(controller);
-		Players[1]->add_capital(Pair(3, 15));
-		static_cast<Capital *>(get_unit(Pair(3, 15)))->change_district_income(7);
+		Players[1]->add_capital(Pair(3, get_game_map().dimension_y() - 4));
+		static_cast<Capital *>(get_unit(Pair(3, get_game_map().dimension_y() - 4)))->change_district_income(7);
 		Players[1]->set_controller(controller);
-		Players[2]->add_capital(Pair(15, 3));
-		static_cast<Capital *>(get_unit(Pair(15, 3)))->change_district_income(7);
+		Players[2]->add_capital(Pair(get_game_map().dimension_x() - 4, 3));
+		static_cast<Capital *>(get_unit(Pair(get_game_map().dimension_x() - 4, 3)))
+			->change_district_income(7);
 		Players[2]->set_controller(controller);
-		Players[3]->add_capital(Pair(15, 15));
-		static_cast<Capital *>(get_unit(Pair(15, 15)))->change_district_income(7);
+		Players[3]->add_capital(Pair(get_game_map().dimension_x() - 4, get_game_map().dimension_y() - 4));
+		static_cast<Capital *>(get_unit(Pair(get_game_map().dimension_x() - 4,
+			get_game_map().dimension_y() - 4)))->change_district_income(7);
 		Players[3]->set_controller(controller);
 		return true;
 	}
@@ -209,12 +221,11 @@ namespace game_module
 
 	void Game::double_trees(Controller * controller)
 	{
-		for (size_type i = 0; i < get_game_map().dimension(); ++i)
+		for (size_type i = 0; i < get_game_map().dimension_x(); ++i)
 		{
-			for (size_type j = 0; j < get_game_map().dimension(); ++j)
+			for (size_type j = 0; j < get_game_map().dimension_y(); ++j)
 			{
-				if ((*this)(Pair(i, j))->occupied()
-					&& is_tree((*this)(Pair(i, j))->get_hex_unit_type()))
+				if (is_tree((*this)(Pair(i, j))->get_hex_unit_type()))
 				{
 					if (static_cast<Tree *>((*this)(Pair(i, j))->get_hex_unit())->ready_to_double())
 					{

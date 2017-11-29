@@ -42,7 +42,7 @@ namespace game_module
 			}
 			case game_module::unit_type::tower:
 			{
-				if (strength >= 1 && strength <= 2)
+				if (strength >= 2 && strength <= 3)
 				{
 					result = new Tower(nullptr, strength);
 				}
@@ -143,7 +143,7 @@ namespace game_module
 		
 		size_type Tower::cost() const
 		{
-			if (Strength == 1)
+			if (Strength == 2)
 			{
 				return 2;
 			}

@@ -22,7 +22,8 @@ namespace game_module
 		Result Results; // результаты соревнования, обновляются по ходу игры
 	public:
 		~Game();
-		Game(size_type max_turns, size_type map_dimension, std::string map_type);
+		Game(size_type max_turns, size_type dimension_x, size_type dimension_y,
+			std::string map_type);
 		bool check_end_game() const;
 		Hex * operator () (const Pair & hex);
 		Hex * operator () (size_type coord1, size_type coord2);

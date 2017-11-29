@@ -11,15 +11,18 @@ namespace game_module
 	class Map
 	{
 	private:
-		Hex *** Root; // указатель на двумерный массив гексов
-		size_type Dimension;
+		Hex *** Root;
+		size_type DimensionX;
+		size_type DimensionY;
 		std::string MapType;
 	public:
 		~Map();
-		Map(size_type dimension = 19,
+		Map(size_type dimension_x = 19,
+			size_type dimension_y = 19,
 			size_type player_number = 4,
 			const std::string & map_type = "classic");
-		size_type dimension() const;
+		size_type dimension_x() const;
+		size_type dimension_y() const;
 		std::string map_type() const;
 		Hex * operator () (const Pair & hex) const;
 		Hex * operator () (size_type coord1, size_type coord2) const;
@@ -45,7 +48,11 @@ namespace game_module
 		bool get_hex_row_exist(const Pair & hex, size_type radius,
 			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
 			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
-		std::vector<Pair> get_district_border_hexs(const Pair & hex);
+		std::vector<Pair> get_internal_border(const Pair & hex,
+			std::function <bool(unit_type)> compare = [](unit_type type) { return true; }) const;
+		std::vector<Pair> get_external_border(const Pair & hex,
+			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
 		std::vector<Pair> easy_solve_maze(const Pair & hex,
 			std::function <bool(unit_type)> compare = [](unit_type type) { return true; }) const;
 		size_type easy_solve_maze_count(const Pair & hex,
@@ -71,7 +78,8 @@ namespace game_module
 	struct MapImpress
 	{
 		HexImpress *** Root;
-		size_type Dimension;
+		size_type DimensionX;
+		size_type DimensionY;
 		~MapImpress();
 		MapImpress(const Map & map);
 		HexImpress & operator () (const Pair & pair);

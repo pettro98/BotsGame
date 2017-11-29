@@ -45,47 +45,14 @@ namespace game_module
 		return GameController->capital(hex);
 	}
 
-	bool Player::get_neighbours_exist(const Pair & hex,
-		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2) const
-	{
-		return GameController->get_neighbours_exist(hex, compare1, compare2);
-	}
-	
-	std::vector<Pair> Player::get_neighbours(const Pair & hex,
-		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2 ) const
-	{
-		return GameController->get_neighbours(hex, compare1, compare2);
-	}
-
-	std::vector<Pair> Player::get_hex_row(const Pair & hex, size_type radius,
-		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2) const
-	{
-		return GameController->get_hex_row(hex, radius, compare1, compare2);
-	}
-
-	bool Player::get_hex_row_exist(const Pair & hex, size_type radius,
-		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2) const
-	{
-		return GameController->get_hex_row_exist(hex, radius, compare1, compare2);
-	}
-
 	size_type Player::distance(const Pair & hex1, const Pair & hex2) const
 	{
 		return GameController->distance(hex1, hex2);
 	}
 
-	bool Player::can_move(const Pair & hex1, const Pair & hex2, size_type move_points) const
+	unit_type Player::get_type(const Pair & hex) const
 	{
-		return GameController->can_move(hex1, hex2, move_points);
-	}
-
-	unit_type Player::get_unit_type(const Pair & hex) const
-	{
-		return GameController->get_unit_type(hex);
+		return GameController->get_type(hex);
 	}
 
 	size_type Player::get_unit_strength(const Pair & hex) const
@@ -108,19 +75,44 @@ namespace game_module
 		return GameController->get_district_money(hex);
 	}
 
+	size_type Player::get_district_income(const Pair & hex) const
+	{
+		return GameController->get_district_income(hex);
+	}
+
+	size_type Player::get_farms_number(const Pair & hex) const
+	{
+		return GameController->get_farms_number(hex);
+	}
+
 	std::string Player::get_map_type() const
 	{
 		return GameController->get_map_type();
 	}
 
-	size_type Player::get_map_dimension() const
+	size_type Player::get_map_dimension_x() const
 	{
-		return GameController->get_map_dimension();
+		return GameController->get_map_dimension_x();
+	}
+
+	size_type Player::get_map_dimension_y() const
+	{
+		return GameController->get_map_dimension_y();
 	}
 
 	size_type Player::get_players_number() const
 	{
 		return GameController->get_players_number();
+	}
+
+	std::vector<hex_color> Player::get_players_colors() const
+	{
+		return GameController->get_players_colors();
+	}
+
+	std::list<Pair> Player::get_player_capitals(hex_color color) const
+	{
+		return GameController->get_player_capitals(color);
 	}
 
 	size_type Player::get_current_turn() const
@@ -132,9 +124,19 @@ namespace game_module
 		return GameController->get_max_turns();
 	}
 
-	bool Player::can_place_static(const Pair & hex) const
+	bool Player::can_move(const Pair & hex1, const Pair & hex2) const
 	{
-		return GameController->can_place_static(hex);
+		return GameController->can_move(hex1, hex2, Army::move_points());
+	}
+
+	bool Player::can_place_tower(const Pair & hex) const
+	{
+		return GameController->can_place_tower(hex);
+	}
+
+	bool Player::can_place_farm(const Pair & hex) const
+	{
+		return GameController->can_place_farm(hex);
 	}
 
 	bool Player::can_place_army(const Pair & hex, size_type strength) const
@@ -142,9 +144,14 @@ namespace game_module
 		return GameController->can_place_army(hex, strength);
 	}
 
-	std::vector<Pair> Player::get_hex_to_capture(const Pair & hex) const
+	std::vector<Pair> Player::hexs_to_place_farm(const Pair & hex) const
 	{
-		return GameController->get_hex_to_capture(hex);
+		return GameController->hexs_to_place_farm(hex);
+	}
+
+	std::vector<Pair> Player::hexs_to_move_army(const Pair & hex) const
+	{
+		return GameController->hexs_to_move_army(hex);
 	}
 
 	std::vector<Pair> Player::get_district_units(const Pair & hex, unit_type type) const
@@ -152,24 +159,82 @@ namespace game_module
 		return GameController->get_district_units(hex, type);
 	}
 
-	std::vector<Pair> Player::get_br_unit(const Pair & hex, unit_type type) const
-	{
-		return GameController->get_br_unit(hex, type);
-	}
-
-	std::vector<Pair> Player::get_enemy_br_units(const Pair & hex) const
-	{
-		return GameController->get_enemy_br_units(hex);
-	}
-
 	std::vector<Pair> Player::get_district_static(const Pair & hex) const
 	{
 		return GameController->get_district_static(hex);
 	}
 
-	std::vector<Pair> Player::get_br_static(const Pair & hex) const
+	std::vector<Pair> Player::get_army_list(const Pair & hex) const
 	{
-		return GameController->get_br_static(hex);
+		return GameController->get_army_list(hex);
+	}
+
+	bool Player::get_neighbours_exist(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_neighbours_exist(hex, compare1, compare2);
+	}
+
+	std::vector<Pair> Player::get_neighbours(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_neighbours(hex, compare1, compare2);
+	}
+
+	std::vector<Pair> Player::get_hex_row(const Pair & hex, size_type radius,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_hex_row(hex, radius, compare1, compare2);
+	}
+
+	bool Player::get_hex_row_exist(const Pair & hex, size_type radius,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_hex_row_exist(hex, radius, compare1, compare2);
+	}
+
+	std::vector<Pair> Player::easy_solve_maze(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return GameController->easy_solve_maze(hex, compare);
+	}
+
+	size_type Player::easy_solve_maze_count(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return GameController->easy_solve_maze_count(hex, compare);
+	}
+
+	std::vector<Pair> Player::get_internal_border(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return GameController->get_internal_border(hex, compare);
+	}
+
+	std::vector<Pair> Player::get_external_border(const Pair & hex,
+		std::function <bool(hex_color)> compare1,
+		std::function <bool(unit_type)> compare2) const
+	{
+		return GameController->get_external_border(hex, compare1, compare2);
+	}
+
+	size_type Player::get_farm_cost(const Pair & hex) const
+	{
+		return GameController->get_farm_cost(hex);
+	}
+
+	size_type Player::get_army_cost(size_type strength) const
+	{
+		return GameController->get_army_cost(strength);
+	}
+
+	size_type Player::get_tower_cost(size_type strength) const
+	{
+		return GameController->get_tower_cost(strength);
 	}
 
 	bool Player::make_move(const Pair & start, const Pair & end)
@@ -190,31 +255,6 @@ namespace game_module
 	bool Player::buy_army(const Pair & hex, size_type strength)
 	{
 		return GameController->buy_army(hex, strength);
-	}
-
-	size_type Player::get_district_income(const Pair & hex) const
-	{
-		return GameController->get_district_income(hex);
-	}
-
-	size_type Player::get_farm_cost(const Pair & hex) const
-	{
-		return GameController->get_farm_cost(hex);
-	}
-
-	size_type Player::get_army_cost(size_type strength) const
-	{
-		return GameController->get_army_cost(strength);
-	}
-
-	size_type Player::get_tower_cost(size_type strength) const
-	{
-		return GameController->get_tower_cost(strength);
-	}
-
-	std::vector<Pair> Player::get_army_list(const Pair & hex) const
-	{
-		return GameController->get_army_list(hex);
 	}
 
 	void Player::add_capital(const Pair & capital)
