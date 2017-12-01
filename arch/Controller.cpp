@@ -461,8 +461,6 @@ namespace game_module
 				{
 					get_capital(start)->change_district_income(-Tree::income());
 				}
-				(*MyAccess)(end)->set_hex_unit(get_unit(start));
-				(*MyAccess)(start)->remove_hex_unit();
 			}
 			else
 			{

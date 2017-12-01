@@ -98,6 +98,7 @@ int main()
 
 	start_game(game, controller);
 	show_results(game, controller);
+
 	system("pause");
 	return 0;
 }

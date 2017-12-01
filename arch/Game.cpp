@@ -8,6 +8,10 @@ namespace game_module
 
 	Game::~Game()
 	{
+		for (auto & i : Players)
+		{
+			delete i;
+		}
 		delete GameMap;
 	}
 

@@ -6,142 +6,465 @@ namespace game_module
 {
 	class Hex;
 
+	/*!
+	\brief Абстрактный класс, моделирует объект, хранящийся в ячейке поля.
+	- Другое имя класса и всех его производных, используемое в докуметации - юнит.
+	*/
 	class Unit
 	{
 	protected:
-		Hex * Field; // гекс на котором юнит находится, юнит принадлежит владельцу гекса
+		/*!
+		\brief Указатель на гекс, в котором хранится данный юнит.
+		*/
+		Hex * Field;
 	public:
+		/*
+		\brief Виртуальный деструктор по умолчанию.
+		*/
 		virtual ~Unit() = default;
+		/*!
+		\brief Конструктор
+
+		\param hex Гекс, в котором будет хранится юнит.
+		*/
 		Unit(Hex * hex);
+		/*!
+		\brief Метод возвращает координаты гекса, в котором хранится юнит.
+		*/
 		Pair coordinates() const;
+		/*!
+		\brief Метод возвращает цвет гекса, в котором хранится юнит.
+		- Цвет гекса совпадает с цветом владельца юнита.
+		*/
 		hex_color color() const;
+		/*! 
+		\brief Чисто виртуальный метод возвращает силу юнита.
+		- Сила юнита целое ненатуральное число.
+		- Сила юнита характеризует его способность "защищаться" или "атаковать", чем выше сила, тем успешнее данные действия.
+		*/
 		virtual size_type strength() const = 0;
+		/*!
+		\brief Чисто виртуальный метод возвращает тип юнита.
+		*/
 		virtual unit_type type() const = 0; 
+		/*!
+		\brief Чисто виртуальный метод возвращает условную ценность юнита.
+		- функция полезна только во внутреннем коде.
+		*/
 		virtual size_type cost() const = 0;
+		/*!
+		\brief Метод устанавливает новый гекс, в котором хранится юнит.
+		- Метод производит одностороннее связывание с гексом.
+
+		\param hex Указатель на новый гекс, в котором будет храниться юнит.
+		*/
 		void set_hex(Hex * hex);
 	};
+	/*!
+	\brief Функция создаёт юнита требуемого типа.
+	- Переданный параметр strength учитывается только при созданию юнита типа army или tower.
+	Если параметр неверен, функция вернет nullptr.
 
+	\param type Требуемый тип юнита.
+	\param strength Сила требуемого типа юнита, по умолчанию равна 0.
+	*/
 	Unit * unit_factory(unit_type type, size_type strength = 0);
-
+	/*!
+	\brief Класс, от которого наследуются классы юнитов, имеющих ненулевой параметр силы.
+	- Объекты данного класса в проекте не создаются.
+	*/
 	class ActiveUnit
 		: public Unit
 	{
 	protected:
+	/*!
+	\brief Сила юнита.
+	*/
 		size_type Strength;
 	public:
+		/*!
+		\brief Виртуальный деструктор по умолчанию.
+		*/
 		virtual ~ActiveUnit() = default;
+		/*!
+		\brief Конструктор.
+		
+		\param hex Гекс где будет храниться юнит.
+		\param strength Сила юнита.
+		*/
 		ActiveUnit(Hex * hex, size_type strength);
+		/*!
+		\brief Метод возвращает копию поля Strength объекта класса.
+		*/
 		size_type strength() const;
 	};
-
+	/*!
+	\brief Класс моделирует юнит "армия".
+	- Другое имя класса, используемое в докуметации - армия.
+	- Армия может перемещаться по полю. Доступно не более одного перемещения за один ход .
+	*/
 	class Army
 		: public ActiveUnit
 	{
 	private:
+		/*!
+		\brief Поле сообщает может ли юнит перемещаться в данный ход.
+		- Информация актуальна только в ход владельца гекса
+		*/
 		bool Moved;
 	public:
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Army() = default;
-		Army(Hex * hex, size_type strength);
-		unit_type type() const;		
-		size_type cost() const;
-		static size_type income(size_type strength);
-		bool moved() const;
-		static size_type move_points();
-		void set_strength(size_type strength);
-		void set_moved(bool moved);
-		void die(); // создает могилу на гексе, применяется при нехватке снабжения
-	};
+		/*!
+		\brief Конструктор.
 
+		\param hex Гекс где будет храниться юнит.
+		\param strength Сила юнита.
+		*/
+		Army(Hex * hex, size_type strength);
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
+		unit_type type() const;	
+		/*!
+		\brief Метод возвращает условную ценность юнита.
+		*/
+		size_type cost() const;
+		/*!
+		\brief Статический метод возвращает сумму у.е., которые юнит добавляет к казне области каждый ход его владельца.
+		- Данный юнит возвращает отрицательное кол-во у.е..
+
+		\param strength сила юнита.
+		- От параметра зависит кол-во у.е., возвращаемых методом.
+		*/
+		static size_type income(size_type strength);
+		/*!
+		\brief Метод возвращает копию поля Moved объекта класса. 
+		*/
+		bool moved() const;
+		/*!
+		\brief Статический метод возвращает кол-во "очков перемещения", которые необходимы для перемещения юнита.
+		*/
+		static size_type move_points();
+		/*!
+		\brief Метод устанавливает новую силу юнита.
+
+		\param strength Новая сила юнита.
+		*/
+		void set_strength(size_type strength);
+		/*!
+		\brief Метод устанавливает новое значение в поле Moved юнита.
+
+		\param strength Новая значение.
+		*/
+		void set_moved(bool moved);
+		/*!
+		\brief Метод "умерщвляет" армию.
+		- Метод удаляет армию и устанавливает на гекс, в котором она находилась юнит типа grave. 
+		*/
+		void die();
+	};
+	/*!
+	\brief Класс моделирует юнит "башня".
+	- Другое имя класса, используемое в докуметации - башня.
+	*/
 	struct Tower
 		: public ActiveUnit
 	{
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Tower() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		\param strength Сила юнита.
+		*/
 		Tower(Hex * hex, size_type strength);
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
 		unit_type type() const;
+		/*!
+		\brief Метод возвращает условную ценность юнита.
+		*/
 		size_type cost() const;
+		/*!
+		\brief Статический метод возвращает сумму у.е., которые юнит добавляет к казне области каждый ход его владельца.
+		- Данный юнит возвращает отрицательное кол-во у.е..
+
+		\param strength сила юнита.
+		- От параметра зависит кол-во у.е., возвращаемых методом.
+		*/
 		static size_type income(size_type strength);
 	};
-
+	/*!
+	\brief Класс моделирует юнит "столица".
+	- Другое имя класса, используемое в докуметации - столица.
+	- Столица является условным центром области, всех связных гексов начиная с гекса, в котором находится столица.
+	*/
 	class Capital
 		: public ActiveUnit
 	{
 	private:
+		/*!
+		\brief Кол-во у.е. области
+		- Другое имя поля, используемое в докуметации - казна.
+		*/
 		size_type DistrictMoney;
+		/*!
+		\brief Кол-во у.е., которое получает казна области сразу перед началом хода её владельца. 
+		- Другое имя поля, используемое в докуметации - доход области.
+		*/
 		size_type DistrictIncome;
+		/*!
+		\brief Кол-во ферм, находящихся в области
+		*/
 		size_type FarmsNumber;
 	public:
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Capital() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		*/
 		Capital(Hex * hex);
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
 		unit_type type() const;
+		/*!
+		\brief Метод возвращает условную ценность юнита.
+		*/
 		size_type cost() const;
+		/*!
+		\brief Метод возвращает копию поля DistrictMoney объекта класса.
+		*/
 		size_type district_money() const;
+		/*!
+		\brief Метод возвращает копию поля DistrictIncome объекта класса.
+		*/
 		size_type district_income() const;
+		/*!
+		\brief Метод возвращает копию поля FarmsNumber объекта класса.
+		*/
 		size_type farms_number() const;
+		/*!
+		\brief Метод увеличивает казну на переданное кол-во у.е.
+		- Если после увеличения казна хранит отрицательное кол-во у.е., то она обнуляется и метод возвращает false.
+		Иначе метод возвращает true.
+
+		\param money Переданное кол-во у.е..
+		- Переданное кол-во у.е. может быть отрицательным.
+		*/
 		bool change_district_money(size_type money);
+		/*!
+		\brief Метод увеличивает доход области на переданное кол-во у.е.
+		*/
 		void change_district_income(size_type income);
+		/*!
+		\brief Метод изменяет доход области как если бы она потеряла переданный гекс.
+
+		\param hex условно потерянный гекс области.
+		*/
 		void change_district_income(Hex * hex);
+		/*!
+		\brief Метод изменяет поле FarmsNumber на переданное число.
+		- Метод не проверяет результат на отрицательность.
+
+		\param number кол-во на которое изменится поле FarmsNumber.
+		*/
 		void change_farms_number(size_type number = 1);
 	};
-
+	/*!
+	\brief Класс, от которого наследуются классы юнитов, имеющих нулевой параметр силы.
+	*/
 	struct PassiveUnit
 		:public Unit
 	{
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		virtual ~PassiveUnit() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		*/
 		PassiveUnit(Hex * hex);
+		/*!
+		\brief Метод возвращает 0.
+		*/
 		size_type strength() const;
 	};
-
+	/*!
+	\brief Класс моделирует юнит "ферма".
+	- Другое имя класса, используемое в докуметации - ферма.
+	*/
 	struct Farm
 		: public PassiveUnit
 	{
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Farm() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		*/
 		Farm(Hex * hex);
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
 		unit_type type() const;
+		/*!
+		\brief Метод возвращает условную ценность юнита.
+		*/
 		size_type cost() const;
+		/*!
+		\brief Статический метод возвращает сумму у.е., которые юнит добавляет к казне области каждый ход его владельца.
+		- Данный юнит возвращает положительное кол-во у.е..
+		*/
 		static size_type income();
 	};
-
+	/*!
+	\brief Абстрактный класс, от которого наследуются классы юнитов, имеющих условный тип деревьев.
+	- Другое имя класса и всех его производных, используемое в докуметации - дерево.
+	*/
 	class Tree
 		: public PassiveUnit
 	{
 	protected:
+		/*!
+		\brief Кол-во ходов необходимое дереву для размножения.
+		*/
 		size_type TurnsFromDouble;
 	public:
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		virtual ~Tree() = default;
-		Tree(Hex * hex);
-		size_type cost() const;
-		static size_type income();
-		virtual size_type turns_to_double() const = 0;
-		bool ready_to_double() const;
-		void has_doubled(); // обнуляет turns_from_double
-		void operator ++(); // ++turns_from_double
-	};
+		/*!
+		\brief Конструктор.
 
+		\param hex Гекс где будет храниться юнит.
+		*/
+		Tree(Hex * hex);
+		/*!
+		\brief Метод возвращает условную ценность юнита.
+		*/
+		size_type cost() const;
+		/*!
+		\brief Статический метод возвращает сумму у.е., которые юнит добавляет к казне области каждый ход его владельца.
+		- Данный юнит возвращает отрицательное кол-во у.е..
+		*/
+		static size_type income();
+		/*!
+		\brief Чисто виртуальный метод возвращает копию поля TurnsToDouble объекта класса.
+		*/
+		virtual size_type turns_to_double() const = 0;
+		/*!
+		\brief Метод сообщает готов ли юнит к размножению.
+		*/
+		bool ready_to_double() const;
+		/*!
+		\brief Метод сообщает юниту, о том, что он размножился.
+		- Поле TurnsFromDouble обнуляется.
+		*/
+		void has_doubled();
+		/*!
+		\brief Увеличивает поле TurnsFromDouble объекта класса на 1.
+		*/
+		void operator ++();
+	};
+	/*!
+	\brief Класс моделирует юнит "пальма".
+	- Другое имя класса, используемое в докуметации - пальма.
+	*/
 	struct Palm
 		: public Tree
 	{
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Palm() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		*/
 		Palm(Hex * hex);
+		/*!
+		\brief Метод возвращает копию поля TurnsToDouble объекта класса.
+		*/
 		size_type turns_to_double() const; // возвращает срок за который размножается данный тип
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
 		unit_type type() const;
 	};
-
+	/*!
+	\brief Класс моделирует юнит "ель".
+	- Другое имя класса, используемое в докуметации - ель.
+	*/
 	struct Pine
 		: public Tree
 	{
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Pine() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		*/
 		Pine(Hex * hex);
-		size_type turns_to_double() const; // возвращает срок за который размножается данный тип
+		/*!
+		\brief Метод возвращает копию поля TurnsToDouble объекта класса.
+		*/
+		size_type turns_to_double() const;
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
 		unit_type type() const;
 	};
-
+	/*!
+	\brief Класс моделирует юнит "могила".
+	- Другое имя класса, используемое в докуметации - могила.
+	*/
 	struct Grave
 		: public PassiveUnit
 	{
+		/*!
+		\brief Деструктор по умолчанию.
+		*/
 		~Grave() = default;
+		/*!
+		\brief Конструктор.
+
+		\param hex Гекс где будет храниться юнит.
+		*/
 		Grave(Hex * hex);
+		/*!
+		\brief Метод возвращает тип юнита.
+		*/
 		unit_type type() const;
+		/*!
+		\brief Метод возвращает условную ценность юнита.
+		*/
 		size_type cost() const;
+		/*!
+		\brief Статический метод возвращает сумму у.е., которые юнит добавляет к казне области каждый ход его владельца.
+		- Данный юнит возвращает отрицательное кол-во у.е..
+		*/
 		static size_type income();
 	};
 }
