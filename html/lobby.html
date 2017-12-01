@@ -1,0 +1,43 @@
+<html><head>
+	<meta charset="utf-8">
+	<title>AntiyoyBots</title>
+</head>
+<body style="overflow: hidden;margin: 2vh;">
+<input onclick="update()" type="submit"></input>
+<text> Currently uploaded bots:</text>
+<table id="table" border="2" border-color="black" width="200">
+</table>
+<script type="text/javascript">
+	var list = {};
+	var Table = document.getElementById("table");
+	function insertElement(table, text){
+		let Td = document.createElement('td');
+		Td.innerHTML = text;
+		let Tr = document.createElement('tr');
+		Tr.appendChild(Td);
+		table.appendChild(Tr);
+		list[text] = null;
+	}
+		
+	function update(){
+	let xhr = new XMLHttpRequest();
+		xhr.open("GET", "/checkbots", false);
+		xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+		xhr.send();
+		if(xhr.status != 200){
+
+		}else{
+			let l = JSON.parse(xhr.responseText);
+				for(var i in l){
+					if(!(l[i] in list)){
+						insertElement(Table, l[i]);
+					}
+				}
+			}
+		};
+		
+setInterval(update(), 10000);
+
+	</script>
+	</body>
+</html>
