@@ -1,6 +1,7 @@
 #include "Game.h"
+#include "Bot.h"
 #include <algorithm> 
-
+#include <string>
 
 namespace game_module
 {
@@ -11,12 +12,56 @@ namespace game_module
 	}
 
 	Game::Game(size_type max_turns, size_type dimension_x, size_type dimension_y
-		, std::string map_type)
+		, std::string map_type, size_type players_number)
 		: CurrentPlayer(game_module::hex_color::blank)
 		, CurrentTurn(0)
 		, MaxTurns(max_turns)
 	{
-		GameMap = new Map(dimension_x, dimension_y, 4, map_type);
+		Players = get_bots();
+		if (map_type == "duel")
+		{
+			while (Players.size() > 2)
+			{
+				Players.pop_back();
+			}
+			while (Players.size() < 2)
+			{
+				add_bot();
+			}
+			GameMap = new Map(dimension_x, dimension_y, 2, map_type);
+		}
+		else if (map_type == "classic")
+		{
+			while (Players.size() > 4)
+			{
+				Players.pop_back();
+			}
+			while (Players.size() < 4)
+			{
+				add_bot();
+			}
+			GameMap = new Map(dimension_x, dimension_y, 4, map_type);
+		}
+		else if (map_type == "random")
+		{
+			if (players_number < 2 || players_number > 6)
+			{
+				players_number = 6;
+			}
+			while (Players.size() > players_number)
+			{
+				Players.pop_back();
+			}
+			while (Players.size() < players_number)
+			{
+				add_bot();
+			}
+			GameMap = new Map(dimension_x, dimension_y, players_number, map_type);
+		}
+		else
+		{
+			throw("incorect_map_type");
+		}
 	}
 
 	bool Game::check_end_game() const
@@ -37,11 +82,11 @@ namespace game_module
 		{
 			return false;
 		}
-		return true;			
+		return true;
 	}
 
 	Hex * Game::operator () (const Pair & hex)
-	{ 
+	{
 		return (*GameMap)(hex);
 	}
 
@@ -57,7 +102,7 @@ namespace game_module
 			return (*GameMap)(hex)->get_hex_unit();
 		}
 	}
-	
+
 	std::vector<Player *> & Game::get_players()
 	{
 		return Players;
@@ -111,7 +156,7 @@ namespace game_module
 		}
 		return false;
 	}
-		
+
 	void Game::set_unit(const Pair & hex, Unit * unit)
 	{
 		if ((*GameMap)(hex) != nullptr)
@@ -173,22 +218,34 @@ namespace game_module
 		++Results.moves[player_index - 1];
 	}
 
-	bool Game::make_players(Controller * controller)
+	bool Game::place_players(Controller * controller)
 	{
-		Players[0]->add_capital(Pair(3, 3));
-		static_cast<Capital *>(get_unit(Pair(3, 3)))->change_district_income(7);
-		Players[0]->set_controller(controller);
-		Players[1]->add_capital(Pair(3, get_game_map().dimension_y() - 4));
-		static_cast<Capital *>(get_unit(Pair(3, get_game_map().dimension_y() - 4)))->change_district_income(7);
-		Players[1]->set_controller(controller);
-		Players[2]->add_capital(Pair(get_game_map().dimension_x() - 4, 3));
-		static_cast<Capital *>(get_unit(Pair(get_game_map().dimension_x() - 4, 3)))
-			->change_district_income(7);
-		Players[2]->set_controller(controller);
-		Players[3]->add_capital(Pair(get_game_map().dimension_x() - 4, get_game_map().dimension_y() - 4));
-		static_cast<Capital *>(get_unit(Pair(get_game_map().dimension_x() - 4,
-			get_game_map().dimension_y() - 4)))->change_district_income(7);
-		Players[3]->set_controller(controller);
+		std::vector<Pair> capitals;
+		for (size_type i = 1; i < GameMap->dimension_x() - 1; ++i)
+		{
+			for (size_type j = 1; j < GameMap->dimension_y() - 1; ++j)
+			{
+				if (get_unit(Pair(i, j)) != nullptr
+					&& is_capital(get_unit(Pair(i, j))->type()))
+				{
+					capitals.push_back(Pair(i, j));
+				}
+			}
+		}
+		for (size_type i = 0; i < capitals.size(); ++i)
+		{
+			Players[i]->add_capital(capitals[i]);
+			(*this)(capitals[i])->set_color(Players[i]->color());
+			(*this)(capitals[i])->set_hex_capital((*this)(capitals[i]));
+			static_cast<Capital *>(get_unit(capitals[i]))->change_district_income(1);
+			for (auto & j : GameMap->get_neighbours(capitals[i]))
+			{
+				(*this)(j)->set_color(Players[i]->color());
+				(*this)(j)->set_hex_capital((*this)(capitals[i]));
+				static_cast<Capital *>(get_unit(capitals[i]))->change_district_income(1);
+			}
+			Players[i]->set_controller(controller);
+		}
 		return true;
 	}
 
@@ -240,11 +297,11 @@ namespace game_module
 								static_cast<Tree *>((*this)(Pair(i, j))->get_hex_unit())->has_doubled();
 								if ((*this)(k)->get_hex_capital())
 								{
-									(*this)(k)->get_hex_capital()->change_district_income(-2);
+									(*this)(k)->get_hex_capital()->change_district_income(Tree::income());
 								}
 								break;
 							}
-						}						
+						}
 					}
 					else
 					{
@@ -253,5 +310,70 @@ namespace game_module
 				}
 			}
 		}
+	}
+
+	hex_color Game::get_winner(Controller * controller)
+	{
+		if (!check_end_game())
+		{
+			return game_module::hex_color::blank;
+		}
+		std::vector<hex_color> players(controller->get_players_colors());
+		if (players.size() == 1)
+		{
+			return players[0];
+		}
+		std::vector<size_type> players_scores;
+		players_scores.resize(players.size());
+		std::multimap<size_type, hex_color> result;
+		for (size_t i = 0; i < players.size(); ++i)
+		{
+			for (auto & j : controller->get_player_capitals(players[i]))
+			{
+				players_scores[i] += 10 * controller->easy_solve_maze_count(j);
+				players_scores[i] += 40 * controller->get_farms_number(j);
+				players_scores[i] += 20 * controller->easy_solve_maze_count(j, is_army);
+			}
+			result.insert(std::make_pair(players_scores[i], players[i]));
+		}
+		return result.rbegin()->second;
+	}
+
+	std::vector<Player *> Game::get_bots()
+	{
+		std::vector<Player *> result;
+		return result;
+	}
+
+	void Game::add_bot()
+	{
+		std::vector<hex_color> players_colors = {
+			red,
+			green,
+			cyan,
+			purple,
+			blue,
+			yellow,
+		};
+		hex_color bot_color(game_module::hex_color::extra);
+		for (auto & i : players_colors)
+		{
+			bool correct_color = true;
+			for (auto & j : Players)
+			{
+				if (j->color() == i)
+				{
+					correct_color = false;
+					break;
+				}
+			}
+			if (correct_color)
+			{
+				bot_color = i;
+				break;
+			}
+		}
+		Bot * new_bot = new Bot(bot_color, get_color_string(bot_color));
+		Players.push_back(new_bot);
 	}
 }

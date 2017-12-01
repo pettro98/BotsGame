@@ -56,13 +56,14 @@ namespace game_module
 		blank,
 		red,
 		green,
-		orange,
+		cyan,
 		purple,
 		blue,
 		yellow,
 		extra
 	};
 
+	std::string get_color_string(hex_color color);
 	bool is_color(hex_color color);
 	bool is_black(hex_color color);
 	bool is_blank(hex_color color);

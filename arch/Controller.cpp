@@ -459,7 +459,7 @@ namespace game_module
 			{
 				if (is_static(get_type(end)))
 				{
-					get_capital(start)->change_district_income(2);
+					get_capital(start)->change_district_income(-Tree::income());
 				}
 				(*MyAccess)(end)->set_hex_unit(get_unit(start));
 				(*MyAccess)(start)->remove_hex_unit();
@@ -529,7 +529,7 @@ namespace game_module
 		{
 			(*MyAccess)(hex)->set_hex_unit(unit_factory(tower, strength));
 			get_capital(hex)->change_district_money(-get_tower_cost(strength));
-			get_capital(hex)->change_district_income(-(2 + 5 * (strength - 2)));
+			get_capital(hex)->change_district_income(Tower::income(strength));
 			MyAccess->add_to_built_towers(MyAccess->get_current_player(), strength);
 			return true;
 		}
@@ -569,17 +569,15 @@ namespace game_module
 			{
 				static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())
 					->set_strength(strength + get_unit_strength(hex));
-				get_capital(hex)->change_district_income(
-					2 * pow(3, get_unit_strength(hex) - 1));
-				get_capital(hex)->change_district_income(
-					-2 * pow(3, strength + get_unit_strength(hex) - 1));
+				get_capital(hex)->change_district_income(-Army::income(get_unit_strength(hex)));
+				get_capital(hex)->change_district_income(Army::income(strength + get_unit_strength(hex)));
 			}
 			else
 			{
 				bool change_moved = false;
 				if (is_static(get_type(hex)))
 				{
-					get_capital(hex)->change_district_income(2);
+					get_capital(hex)->change_district_income(-Tree::income());
 					change_moved = true;
 				}
 				(*MyAccess)(hex)->set_hex_unit(unit_factory(game_module::unit_type::army, strength));
@@ -587,7 +585,7 @@ namespace game_module
 				{
 					static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())->set_moved(true);
 				}
-				get_capital(hex)->change_district_income(-2 * pow(3, strength - 1));
+				get_capital(hex)->change_district_income(Army::income(strength));
 			}
 			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_army_cost(strength));
 			MyAccess->add_to_built_armies(MyAccess->get_current_player(), strength);
@@ -645,7 +643,7 @@ namespace game_module
 					}
 				}
 			}
-			get_capital(hex)->change_district_income(-2 * pow(3, strength - 1) + 1);
+			get_capital(hex)->change_district_income(Army::income(strength) + 1);
 			get_capital(hex)->change_district_money(-get_army_cost(strength));
 			MyAccess->add_to_built_armies(MyAccess->get_current_player(), strength);
 			MyAccess->add_to_moves(MyAccess->get_current_player());
@@ -716,7 +714,7 @@ namespace game_module
 					}
 				}
 			}			
-			(*MyAccess)(new_capital)->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
+			(*MyAccess)(new_capital)->set_hex_unit(unit_factory(game_module::unit_type::capital));
 			MyAccess->get_player(color(hex))->add_capital(new_capital);
 		}
 		else if (district_capitals.size() > 1)
@@ -811,7 +809,7 @@ namespace game_module
 			++result;
 			if (is_static(get_type(i)))
 			{
-				result -= 2;
+				result += Tree::income();
 			}
 			else if (is_player_unit(get_type(i)))
 			{

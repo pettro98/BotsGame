@@ -50,10 +50,7 @@ namespace game_module
 			}
 			case game_module::unit_type::capital:
 			{
-				if (strength == 1)
-				{
-					result = new Capital(nullptr);
-				}
+				result = new Capital(nullptr);
 				break;
 			}
 			case game_module::unit_type::farm:
@@ -112,6 +109,15 @@ namespace game_module
 			return 2 * pow(3, Strength - 1);
 		}
 
+		size_type Army::income(size_type strength)
+		{
+			if (strength > 0 && strength < 5)
+			{
+				return -2 * pow(3, strength - 1);
+			}
+			return 0;
+		}
+
 		size_type Army::move_points()
 		{
 			return 6;
@@ -127,7 +133,7 @@ namespace game_module
 			Moved = moved;
 		}
 
-		void Army::die() // создает могилу на гексе, применяется при нехватке снабжения
+		void Army::die()
 		{
 			Field->set_hex_unit(unit_factory(game_module::unit_type::grave));
 		}
@@ -150,6 +156,19 @@ namespace game_module
 			return 7;
 		}
 
+		size_type Tower::income(size_type strength)
+		{
+			if (strength == 2)
+			{
+				return -2;
+			}
+			else if (strength == 3)
+			{
+				return -7;
+			}
+			return 0;
+		}
+
 		Capital::Capital(Hex * hex)
 			: ActiveUnit(hex, 1)
 			, DistrictMoney(0)
@@ -164,7 +183,7 @@ namespace game_module
 
 		size_type Capital::cost() const
 		{
-			return 99;
+			return 0;
 		}
 
 		size_type Capital::district_money() const
@@ -247,7 +266,7 @@ namespace game_module
 
 		size_type Farm::cost() const
 		{
-			return 12;
+			return 4;
 		}
 
 		size_type Farm::income()
@@ -262,7 +281,12 @@ namespace game_module
 
 		size_type Tree::cost() const
 		{
-			return 0;
+			return 2;
+		}
+
+		size_type Tree::income()
+		{
+			return -2;
 		}
 
 		bool Tree::ready_to_double() const
@@ -320,5 +344,10 @@ namespace game_module
 		size_type Grave::cost() const
 		{
 			return 0;
+		}
+
+		size_type Grave::income()
+		{
+			return -2;
 		}
 }

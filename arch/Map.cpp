@@ -2,6 +2,7 @@
 #include "Map.h"
 #include <windows.h>
 #include <functional>
+#include <algorithm> 
 
 
 namespace game_module
@@ -121,59 +122,60 @@ namespace game_module
 
 	std::vector<Pair> Map::get_neighbours(size_type coord1, size_type coord2,
 		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2) const
+		std::function <bool(unit_type)> compare2,
+		bool return_black) const
 	{
 		std::vector<Pair> result;
 		if (coord1 % 2)
 		{
-			if (hex_acceptable(Pair(coord1 - 1, coord2), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 - 1, coord2), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 - 1, coord2));
 			}
-			if (hex_acceptable(Pair(coord1 - 1, coord2 + 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 - 1, coord2 + 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 - 1, coord2 + 1));
 			}
-			if (hex_acceptable(Pair(coord1, coord2 + 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1, coord2 + 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1, coord2 + 1));
 			}
-			if (hex_acceptable(Pair(coord1 + 1, coord2 + 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 + 1, coord2 + 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 + 1, coord2 + 1));
 			}
-			if (hex_acceptable(Pair(coord1 + 1, coord2), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 + 1, coord2), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 + 1, coord2));
 			}
-			if (hex_acceptable(Pair(coord1, coord2 - 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1, coord2 - 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1, coord2 - 1));
 			}
 		}
 		else
 		{
-			if (hex_acceptable(Pair(coord1 - 1, coord2 - 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 - 1, coord2 - 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 - 1, coord2 - 1));
 			}
-			if (hex_acceptable(Pair(coord1 - 1, coord2), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 - 1, coord2), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 - 1, coord2));
 			}
-			if (hex_acceptable(Pair(coord1, coord2 + 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1, coord2 + 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1, coord2 + 1));
 			}
-			if (hex_acceptable(Pair(coord1 + 1, coord2), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 + 1, coord2), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 + 1, coord2));
 			}
-			if (hex_acceptable(Pair(coord1 + 1, coord2 - 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1 + 1, coord2 - 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1 + 1, coord2 - 1));
 			}
-			if (hex_acceptable(Pair(coord1, coord2 - 1), compare1, compare2))
+			if (hex_acceptable(Pair(coord1, coord2 - 1), compare1, compare2, return_black))
 			{
 				result.push_back(Pair(coord1, coord2 - 1));
 			}
@@ -183,9 +185,10 @@ namespace game_module
 
 	std::vector<Pair> Map::get_neighbours(const Pair & hex,
 		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2) const
+		std::function <bool(unit_type)> compare2,
+		bool return_black) const
 	{
-		return get_neighbours(hex.First, hex.Second, compare1, compare2);
+		return get_neighbours(hex.First, hex.Second, compare1, compare2, return_black);
 	}
 	
 	std::vector<Pair> Map::get_hex_row(const Pair & hex, size_type radius,
@@ -539,63 +542,152 @@ namespace game_module
 	
 	void Map::generate_map(size_type player_number)
 	{
-		Hex *** root = new Hex **[DimensionX];
-		for (size_type i = 0; i < DimensionX; ++i)
+		if (MapType == "random")
 		{
-			root[i] = new Hex *[DimensionY];
-			for (size_type j = 0; j < DimensionY; ++j)
+			if (DimensionX < 17)
 			{
-				root[i][j] = new Hex(i, j);
-				if (!hex_exist(Pair(i, j)))
+				DimensionX = 17;
+			}
+			else if (!(DimensionX % 2))
+			{
+				++DimensionX;
+			}
+			if (DimensionY < 17)
+			{
+				DimensionY = 17;
+			}
+			else if (!(DimensionY % 2))
+			{
+				++DimensionY;
+			}
+			Hex *** root = new Hex **[DimensionX];
+			for (size_type i = 0; i < DimensionX; ++i)
+			{
+				root[i] = new Hex *[DimensionY];
+				for (size_type j = 0; j < DimensionY; ++j)
 				{
+					root[i][j] = new Hex(i, j);
 					root[i][j]->set_color(game_module::hex_color::black);
 				}
 			}
-		}
-		Root = root;
-		if (MapType == "classic")
-		{
-			(*this)(Pair(3, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(3, 3))->set_color(red);
-			(*this)(Pair(3, 3))->set_hex_capital((*this)(Pair(3, 3)));
-			for (auto & i : get_neighbours(Pair(3, 3)))
-			{
-				(*this)(i)->set_color(red);
-				(*this)(i)->set_hex_capital((*this)(Pair(3, 3)));
-			}
-			(*this)(Pair(3, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(3, DimensionY - 4))->set_color(game_module::hex_color::green);
-			(*this)(Pair(3, DimensionY - 4))->set_hex_capital((*this)(Pair(3, DimensionY - 4)));
-			for (auto & i : get_neighbours(Pair(3, DimensionY - 4)))
-			{
-				(*this)(i)->set_color(game_module::hex_color::green);
-				(*this)(i)->set_hex_capital((*this)(Pair(3, DimensionY - 4)));
-			}
-			(*this)(Pair(DimensionX - 4, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(DimensionX - 4, 3))->set_color(game_module::hex_color::orange);
-			(*this)(Pair(DimensionX - 4, 3))->set_hex_capital((*this)(Pair(DimensionX - 4, 3)));
-			for (auto & i : get_neighbours(Pair(DimensionX - 4, 3)))
-			{
-				(*this)(i)->set_color(game_module::hex_color::orange);
-				(*this)(i)->set_hex_capital((*this)(Pair(DimensionX - 4, 3)));
+			Root = root;
+			root[DimensionX / 2][DimensionY / 2]->set_color(game_module::hex_color::blank);
 
-			}
-			(*this)(Pair(DimensionX - 4, DimensionY - 4))
-				->set_hex_unit(unit_factory(game_module::unit_type::capital, 1));
-			(*this)(Pair(DimensionX - 4, DimensionY - 4))
-				->set_color(game_module::hex_color::purple);
-			(*this)(Pair(DimensionX - 4, DimensionY - 4))
-				->set_hex_capital((*this)(Pair(DimensionX - 4, DimensionY - 4)));
-			for (auto & i : get_neighbours(Pair(DimensionX - 4, DimensionY - 4)))
+			for (size_type i = 0; i < 10; ++i)
 			{
-				(*this)(i)->set_color(game_module::hex_color::purple);
-				(*this)(i)->set_hex_capital((*this)(Pair(DimensionX - 4, DimensionY - 4)));
-			}		
-			for (size_type i = 0; i < 3; ++i)
-			{
-				for (auto & j : get_hex_row(Pair(DimensionX / 2, DimensionY / 2), i))
+				Pair start_point(DimensionX / 2, DimensionY / 2);
+				for (size_type j = 0; j < 0.4 * DimensionX * DimensionY / 10;)
 				{
-					(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::pine));
+					auto black_neighbours = get_neighbours(start_point, is_black, is_none, true);
+					std::random_shuffle(black_neighbours.begin(), black_neighbours.end());
+					bool find = false;
+					for (auto & k : black_neighbours)
+					{
+						if (hex_exist(k))
+						{
+							(*this)(k)->set_color(game_module::hex_color::blank);
+							j++;
+							start_point = k;
+							find = true;
+							break;
+						}
+					}
+					if (!find)
+					{
+						black_neighbours = get_neighbours(start_point, is_blank, is_none, true);
+						std::random_shuffle(black_neighbours.begin(), black_neighbours.end());
+						start_point = black_neighbours[0];
+					}
+				}
+			}
+			auto all_map = solve_maze(Pair(DimensionX / 2, DimensionY / 2));
+			std::vector<Pair> capitals;
+			size_type iterations = 0;
+			while (capitals.size() < player_number)
+			{
+				++iterations;
+				Pair new_capital = all_map[std::rand() % all_map.size()];
+				bool find = false;
+				for (auto & i : capitals)
+				{
+					if (get_distance(new_capital, i) < 6)
+					{
+						find = true;
+						break;
+					}
+				}
+				if (!find)
+				{
+					capitals.push_back(new_capital);
+					iterations = 0;
+				}
+				if (iterations > 100)
+				{
+					capitals.clear();
+				}
+			}
+			for (auto & i : capitals)
+			{
+				(*this)(i)->set_hex_unit(unit_factory(game_module::unit_type::capital));
+			}
+			return;
+		}
+		else
+		{
+			if (DimensionX < 11)
+			{
+				DimensionX = 11;
+			}
+			else if (!(DimensionX % 2))
+			{
+				++DimensionX;
+			}
+			if (DimensionY < 11)
+			{
+				DimensionY = 11;
+			}
+			else if (!(DimensionY % 2))
+			{
+				++DimensionY;
+			}
+			Hex *** root = new Hex **[DimensionX];
+			for (size_type i = 0; i < DimensionX; ++i)
+			{
+				root[i] = new Hex *[DimensionY];
+				for (size_type j = 0; j < DimensionY; ++j)
+				{
+					root[i][j] = new Hex(i, j);
+					if (!hex_exist(Pair(i, j)))
+					{
+						root[i][j]->set_color(game_module::hex_color::black);
+					}
+				}
+			}
+			Root = root;
+			if (MapType == "classic")
+			{
+				(*this)(Pair(3, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(3, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX - 4, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX - 4, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				for (size_type i = 0; i < 3; ++i)
+				{
+					for (auto & j : get_hex_row(Pair(DimensionX / 2, DimensionY / 2), i))
+					{
+						(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::pine));
+					}
+				}
+			}
+			else if (MapType == "duel")
+			{
+				(*this)(Pair(DimensionX / 2, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX / 2, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				for (size_type i = 0; i < 3; ++i)
+				{
+					for (auto & j : get_hex_row(Pair(DimensionX / 2, DimensionY / 2), i))
+					{
+						(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::pine));
+					}
 				}
 			}
 		}
@@ -603,8 +695,13 @@ namespace game_module
 
 	bool Map::hex_acceptable(const Pair & hex,
 		std::function <bool(hex_color)> compare1,
-		std::function <bool(unit_type)> compare2) const
+		std::function <bool(unit_type)> compare2,
+		bool return_black) const
 	{
+		if (return_black)
+		{
+			return (hex_exist(hex) && compare1(color(hex)) && compare2(type(hex)));
+		}
 		return (hex_exist(hex) && color(hex) != game_module::hex_color::black
 			&& compare1(color(hex)) && compare2(type(hex)));
 	}
@@ -719,7 +816,6 @@ namespace game_module
 					if (is_army(map(j, i)->get_hex_unit_type()))
 					{
 						std::cout << map(j, i)->get_hex_unit()->strength();
-
 					}
 					else if (is_tower(map(j, i)->get_hex_unit_type()))
 					{

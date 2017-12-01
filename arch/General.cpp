@@ -106,6 +106,33 @@ namespace game_module
 		return (is_static(type) || type == game_module::unit_type::none);
 	}
 
+	std::string get_color_string(hex_color color)
+	{
+		switch (color)
+		{
+		case game_module::hex_color::black:
+			return "black";
+		case game_module::hex_color::blank:
+			return "blank";
+		case game_module::hex_color::red:
+			return "red";
+		case game_module::hex_color::green:
+			return "green";
+		case game_module::hex_color::cyan:
+			return "cyan";
+		case game_module::hex_color::purple:
+			return "purple";
+		case game_module::hex_color::blue:
+			return "blue";
+		case game_module::hex_color::yellow:
+			return "yellow";
+		case game_module::hex_color::extra:
+			return "extra";
+		default:
+			return "error_color";
+		}
+	}
+
 	bool is_color(hex_color color)
 	{
 		return true;

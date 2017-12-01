@@ -14,16 +14,16 @@ namespace game_module
 		: public IFullAccess
 	{
 	private:
-		std::vector<Player * > Players; // игроки, учавствующие в игре и их индексы
+		std::vector<Player * > Players;
 		hex_color CurrentPlayer;
-		Map * GameMap; // указатель на карту
-		size_type CurrentTurn; // текущий ход
-		size_type MaxTurns; // количество ходов, через которое игра прекратится автоматически
-		Result Results; // результаты соревнования, обновляются по ходу игры
+		Map * GameMap;
+		size_type CurrentTurn;
+		size_type MaxTurns;
+		Result Results;
 	public:
 		~Game();
 		Game(size_type max_turns, size_type dimension_x, size_type dimension_y,
-			std::string map_type);
+			std::string map_type, size_type players_number = 6);
 		bool check_end_game() const;
 		Hex * operator () (const Pair & hex);
 		Hex * operator () (size_type coord1, size_type coord2);
@@ -47,8 +47,11 @@ namespace game_module
 		void add_to_built_farms(size_type player_color);
 		void add_to_built_towers(size_type player_color, size_type number = 1);
 		void add_to_moves(size_type player_color);
-		bool make_players(Controller * controller);
+		bool place_players(Controller * controller);
 		void prepare_player(Controller * controller);
 		void double_trees(Controller * controller);
+		hex_color get_winner(Controller * controller);
+		std::vector<Player *> get_bots();
+		void add_bot();
 	};
 }

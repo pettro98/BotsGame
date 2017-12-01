@@ -38,10 +38,12 @@ namespace game_module
 			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
 		std::vector<Pair> get_neighbours(size_type coord1, size_type coord2,
 			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
-			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; },
+			bool return_black = false) const;
 		std::vector<Pair> get_neighbours(const Pair & hex,
 			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
-			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; },
+			bool return_black = false) const;
 		std::vector<Pair> get_hex_row(const Pair & hex, size_type radius,
 			std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
 			std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
@@ -62,7 +64,8 @@ namespace game_module
 		void generate_map(size_type player_number = 4);
 		bool hex_acceptable(const Pair & hex,
 		std::function <bool(hex_color)> compare1 = [](hex_color color) { return true; },
-		std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; }) const;
+		std::function <bool(unit_type)> compare2 = [](unit_type type) { return true; },
+		bool return_black = false) const;
 	};
 
 	void print_map(const Map & map);

@@ -12,7 +12,7 @@ namespace game_module
 
 	Hex::Hex(size_type coord_1, size_type coord_2)
 		: Coordinates(coord_1, coord_2)
-		, Color(blank)
+		, Color(game_module::hex_color::blank)
 		, HexUnit(nullptr)
 		, HexCapital(nullptr)
 	{ }
@@ -60,6 +60,13 @@ namespace game_module
 		Color = new_color;
 	}
 
+	void Hex::set_hex_unit(Unit * unit)
+	{
+		delete HexUnit;
+		HexUnit = unit;
+		HexUnit->set_hex(this);
+	}
+
 	void Hex::set_hex_capital(Hex * new_capital)
 	{
 		if (new_capital == nullptr)
@@ -85,13 +92,6 @@ namespace game_module
 	{
 		delete HexUnit;
 		HexUnit = nullptr;
-	}
-
-	void Hex::set_hex_unit(Unit * unit)
-	{
-		delete HexUnit;
-		HexUnit = unit;
-		HexUnit->set_hex(this);
 	}
 
 	bool operator != (const Hex & hex1, const Hex & hex2)

@@ -59,7 +59,7 @@ void start_game(Game & game, Controller & controller, bool show_map = false)
 	}
 }
 
-void show_results(Game & game)
+void show_results(Game & game, Controller & controller)
 {
 	for (size_type i = 0; i < game.get_players().size(); ++i)
 	{
@@ -78,6 +78,7 @@ void show_results(Game & game)
 			<< ", moves = " << game.results().moves[i]
 			<< std::endl;
 	}
+	std::cout << "winner is : " << game.get_player(game.get_winner(&controller))->name() << std::endl;
 }
 
 int main() 
@@ -91,18 +92,12 @@ int main()
 	SetConsoleScreenBufferSize(out_handle, maxWindow);
 	SetConsoleWindowInfo(out_handle, true, &srctWindow);
 
-	Game game(500, 33, 27, "classic");
+	Game game(50, 29, 28, "random");
 	Controller controller(&game);
-	Bot bot1(game_module::hex_color::red, "red");
-	Bot bot2(game_module::hex_color::green, "green");
-	Bot bot3(game_module::hex_color::orange, "orange");
-	Bot bot4(game_module::hex_color::purple, "purple");
-	std::vector<Player *> players = { &bot1, &bot2, &bot3, &bot4 };
-	game.get_players() = players;
-	game.make_players(&controller);
+	game.place_players(&controller);
 
-	start_game(game, controller, true);
-	show_results(game);
+	start_game(game, controller);
+	show_results(game, controller);
 	system("pause");
 	return 0;
 }

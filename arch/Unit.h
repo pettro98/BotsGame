@@ -44,6 +44,7 @@ namespace game_module
 		Army(Hex * hex, size_type strength);
 		unit_type type() const;		
 		size_type cost() const;
+		static size_type income(size_type strength);
 		bool moved() const;
 		static size_type move_points();
 		void set_strength(size_type strength);
@@ -58,6 +59,7 @@ namespace game_module
 		Tower(Hex * hex, size_type strength);
 		unit_type type() const;
 		size_type cost() const;
+		static size_type income(size_type strength);
 	};
 
 	class Capital
@@ -108,6 +110,7 @@ namespace game_module
 		virtual ~Tree() = default;
 		Tree(Hex * hex);
 		size_type cost() const;
+		static size_type income();
 		virtual size_type turns_to_double() const = 0;
 		bool ready_to_double() const;
 		void has_doubled(); // обнуляет turns_from_double
@@ -139,5 +142,6 @@ namespace game_module
 		Grave(Hex * hex);
 		unit_type type() const;
 		size_type cost() const;
+		static size_type income();
 	};
 }
