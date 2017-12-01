@@ -44,3 +44,7 @@
 *.db
 *.filters
 *.vcxproj
+
+# Other
+*TODO*
+*.vs*
