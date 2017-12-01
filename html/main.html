@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>AntiyoyBots</title>
+		<link rel="icon" href="http://localhost:5000/favicon.ico"></link>
+	</head>
+	<body>
+		<label for="uploadButton">You can upload your cpp file here:</label>
+		<input id="uploadButton" accept="text/x-c" required type="file">
+		<input id="sendButton"  onclick="upload();" value="Send" type="submit">
+		<text id="err_text" hidden></text>
+		<input onclick="updateTable();" style="margin-top: 4vh;" value="Update" type="submit">
+		<text id="botmsg">Currently uploaded bots:</text>
+		<table id="bots_table" border-color="black" width="200" border="2"></table>
+		<input type="submit" id="startButton" onclick="startGame()" value="Start game" disabled="true">
+	</body>
+	<script type="text/javascript" src="/scripts/jquery.min.js"></script>
+	<script type="text/javascript" src="/scripts/main_page.js"></script>
+</html>
