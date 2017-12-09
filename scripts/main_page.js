@@ -4,7 +4,9 @@ const botsTable = document.getElementById("botsTable");
 const errorMsg = document.getElementById("errorMsg");
 const uploadElem = document.getElementById("uploadElem");
 const errText = document.getElementById("errText");
-const botMsg = document.getElementById("botMsg")
+const botMsg = document.getElementById("botMsg");
+const botName = document.getElementById("botName");
+const countElem = document.getElementById("countElem");
 
 const tableContents = { bots: [] };
 const XHR_TIMEOUT = 10000;
@@ -55,7 +57,7 @@ function clearTable() {
 
 function fillTable(container) {
 	for (let el in container) {
-		addTableRow(container[el]);
+		addTableRow(el, container[el]);
 	};
 }
 
@@ -67,7 +69,7 @@ function refillTable(data) {
 	clearTable();
 	fillTable(data);
 	let botCount = tableContents.bots.length;
-	if (botCount == 2 || botCount == 4 || botCount == 6) {
+	if (botCount < 2 || botCount > 6) {
 		document.getElementById("startButton").removeAttribute("disabled");
 	} else {
 		document.getElementById("startButton").setAttribute("disabled", "");
@@ -75,7 +77,7 @@ function refillTable(data) {
 }
 
 function updateTable() {
-	sendXHR("GET", "/check_bots", "", function (xhr) {
+	sendXHR("GET", "/bots", "", function (xhr) {
 		return function () {
 			if (xhr.status == 200) {
 				refillTable(JSON.parse(xhr.responseText));
@@ -84,26 +86,58 @@ function updateTable() {
 	});
 }
 
-// first load of table
 updateTable();
-setInterval(updateTable, 5000);
+setInterval(updateTable, REQ_REPEAT_TIME);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function startAnimation() {
+	errText.textContent = "Preparing game. Please, wait...";
+	errText.removeAttribute("hidden");
+}
+
+function stopAnimation() {
+	errText.setAttribute("hidden", "");
+}
 
 function upload() {
 	let fdata = new FormData();
 	let file = uploadElem.files[0];
 
-	fdata.append("sourceFile", file);
+	for (let i in tableContents.bots) {
+		if (tableContents.bots[i][1] == botName.value) {
+			alert("friendly_name_exists");
+			return;
+		}
+	}
 
-	sendXHR("POST", "/upload_sources", fdata, function () { return updateTable });
+	fdata.append("command", "add");
+	fdata.append("sourceFile", file);
+	fdata.append("bot-name", botName.value);
+
+	sendXHR("POST", "/bots", fdata, function (xhr) {
+	});
 }
 
 
 function startGame() {
 	startAnimation();
-	sendXHR("POST", "/game", "start", function (xhr) {
+	let form = new FormData();
+	form.append("command", "start");
+
+	if (countElem.value > 6 || countElem.value < 2) {
+		alert("wrong number of bots in the textfield");
+		return;
+	}
+
+	let mas = [countElem.value];
+	for (let i in tableContents.bots) {
+		mas.push(tableContents.bots[i][1]);
+	}
+
+	form.append("content", mas.join(" "));
+
+	sendXHR("POST", "/bots", form, function (xhr) {
 		return function () {
 			stopAnimation();
 			if (xhr.status == 200) {
@@ -116,5 +150,15 @@ function startGame() {
 }
 
 function cleanSources() {
-	sendXHR("POST", "/game", "clean", function () { return updateTable });
+	let fdata = new FormData();
+	fdata.append("command", "clean");
+	sendXHR("POST", "/bots", fdata, function () {
+		return function () {
+			if (xhr.status == 200) {
+				updateTable();
+			} else {
+				alert(xhr.responseText);
+			}
+		}
+	});
 }

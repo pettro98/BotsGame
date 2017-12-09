@@ -29,7 +29,7 @@ module.exports.myLog = (...args) => {
 };
 
 module.exports.logRequest = (req, res, next) => {
-	module.exports.myLog(req.method, req.url);
+	module.exports.myLog(req.method, req.url, req.files);
 	next();
 };
 

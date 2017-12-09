@@ -14,12 +14,7 @@ function botsSubapp() {
 
     let botList = {};
 
-    function fillBotList() {
-        botList = JSON.parse(fs.readFileSync(
-            path.join(__dirname, "botlist.json"), "utf8"));
-    };
-
-    fillBotList();
+    cleanSources();
 
     function getBotNames(res, req, next) {
         let botList2 = {};
@@ -29,16 +24,11 @@ function botsSubapp() {
         res.status(200).json(botList2);
     };
 
-    function updateBotList() {
-        fs.writeFileSync(path.join(__dirname, "botlist.json"),
-            JSON.stringify(botList), "utf8");
-    };
-
     function addSource(req, res, next) {
         let fname = path.join(__dirname, util.DIRS.uploadedSrc,
             req.files[util.INPUT_NAME].name);
         if (fs.existsSync(fname)) {
-            res.status(400).send("file already exists");
+            res.status(400).send("file_already_exists");
             fs.unlinkSync(req.files[util.INPUT_NAME].path);
             util.myLog("ERROR: file already exists");
             return;
@@ -46,7 +36,6 @@ function botsSubapp() {
         fs.renameSync(req.files[util.INPUT_NAME].path, fname);
         botList[req.files["bot-name"]] = { path: fname };
         util.myLog("Received bot source successfully");
-        updateBotList();
     };
 
     function cleanSources(req, res, next) {
@@ -63,10 +52,10 @@ function botsSubapp() {
         }
 
         for (let i in toDel) {
-            delete botList[i];
+            if (botList[toDel[i]]) {
+                delete botList[i];
+            }
         }
-
-        updateBotList();
     };
 
     function getSourcesList(dir) {
@@ -83,28 +72,28 @@ function botsSubapp() {
         let i = 1;
         for (; i < mas.length && i < 6; i++) {
             header += "#define BOT_" + i + " " +
-                util.getShortName(botList[mas[i]].path) + "\n";
+                util.withoutExt(util.getShortName(botList[mas[i]].path)) + "\n";
         }
         for (; i < mas[0]; i++) {
-            header += "#define BOT_" + i + " " + "Bot \n";
+            header += "#define BOT_" + i + " " + "game_module::Bot \n";
         }
         fs.writeFileSync(headerPath, header);
     };
 
     function buildGame() {
         let result = exec.spawnSync("cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install -DCMAKE_BUILD_TYPE=Release && cmake --build _build --clean-first",
-            { env = process.env });
+            { env: process.env });
         return result.status;
     };
 
     function startGame(req, res, next) {
         let mas = req.files["content"].split(" ");
-        detHeader(mas);
+        setHeader(mas);
 
         process.env.BOT_SOURCES = getSourcesList("arch");
         let buildCode = buildGame();
         if (buildCode == 1) {
-            res.status(500).send("compile error");
+            res.status(500).send("compile_error");
             return;
         } else if (buildCode == 127) {
             res.status(500).send("cmake_not_found");

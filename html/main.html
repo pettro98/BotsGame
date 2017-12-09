@@ -16,6 +16,11 @@
 			<label for="uploadElem">You can upload your cpp file here:</label>
 		</p>
 		<input id="uploadElem" required="" style="margin-left: 1vh;font-size: 1.7vh;" type="file">
+		<input id="botName" required="" placeholder="Enter friendly name">
+		</p>
+		<p>
+		<input id="countElem" required="" placeholder="Enter number of bots">
+		</p>
 		<p>
 			<input id="sendButton" onclick="upload();" value="Send" style="width: 8vh;" type="submit">
 			<input id="startButton" onclick="startGame();" value="Start game" disabled="" type="submit">
@@ -25,7 +30,7 @@
 			<text id="errText" hidden=""></text>
 		</p>
 	</div>
-	<div style="float: left;padding: 1vh;font-size: 2vh;">
+	<div style="float: left;padding-left: 3vh;font-size: 2vh;">
 		<p>
 			<input onclick="updateTable();" value="Update table" type="submit">
 		</p>
@@ -33,7 +38,10 @@
 			<text id="botMsg">Currently uploaded bots: 0</text>
 		</p>
 		<table id="botsTable" border-color="black" width="200" border="2"></table>
-		<p></p>
+		<p>
+			RULES OF UPLOADING FILES:
+			1. Name of your file and friendly name must be unique
+		</p>
 	</div>
 
 	<script type="text/javascript" src="/scripts/jquery.min.js"></script>
