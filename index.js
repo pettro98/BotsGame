@@ -35,8 +35,8 @@ const app = express();
 //  GENERAL REQUEST HANDLERS
 ////////////////////////////////////////////////////////////////////////////////
 
-app.use(util.logRequest);
 app.use(multipart());
+app.use(util.logRequest);
 app.use(favicon(util.FILES.favicon.path));
 app.use("/scripts", express.static(util.DIRS.scriptsPath));
 

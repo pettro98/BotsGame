@@ -39,25 +39,28 @@ function sendXHR(method, url, data, onload, onerror, ontimeout) {
 }
 
 function addTableRow() {
-	let row = document.createElement("tr");
-	let mas = [row];
-	for (let i in arguments) {
-		row.innerHTML += "<td>" + arguments[i] + "</td>";
-		mas.push(arguments[i]);
-	};
-	tableContents.bots.push(mas);
-	botsTable.appendChild(row);
+	if (arguments.length != 0) {
+		let row = document.createElement("tr");
+		let mas = [row];
+		for (let i in arguments) {
+			row.innerHTML += "<td>" + arguments[i] + "</td>";
+			mas.push(arguments[i]);
+		};
+		tableContents.bots.push(mas);
+		botsTable.appendChild(row);
+	}
 	botMsg.innerHTML = "Currently uploaded bots: " + tableContents.bots.length;
 }
 
 function clearTable() {
 	botsTable.innerHTML = "";
 	tableContents.bots = [];
+	botMsg.innerHTML = "Currently uploaded bots: " + tableContents.bots.length;
 }
 
 function fillTable(container) {
 	for (let el in container) {
-		addTableRow(el, container[el]);
+		addTableRow(el, container[el].path);
 	};
 }
 
@@ -69,7 +72,7 @@ function refillTable(data) {
 	clearTable();
 	fillTable(data);
 	let botCount = tableContents.bots.length;
-	if (botCount < 2 || botCount > 6) {
+	if (botCount <= 6) {
 		document.getElementById("startButton").removeAttribute("disabled");
 	} else {
 		document.getElementById("startButton").setAttribute("disabled", "");
@@ -112,10 +115,17 @@ function upload() {
 	}
 
 	fdata.append("command", "add");
-	fdata.append("sourceFile", file);
+	fdata.append("uploadElem", file);
 	fdata.append("bot-name", botName.value);
 
 	sendXHR("POST", "/bots", fdata, function (xhr) {
+		return function () {
+			if (xhr.status == 200) {
+				updateTable();
+			} else {
+				alert(xhr.responseText);
+			}
+		}
 	});
 }
 
@@ -125,7 +135,7 @@ function startGame() {
 	let form = new FormData();
 	form.append("command", "start");
 
-	if (countElem.value > 6 || countElem.value < 2) {
+	if (countElem.value > 6 || countElem.value < tableContents.bots.length) {
 		alert("wrong number of bots in the textfield");
 		return;
 	}
@@ -152,7 +162,7 @@ function startGame() {
 function cleanSources() {
 	let fdata = new FormData();
 	fdata.append("command", "clean");
-	sendXHR("POST", "/bots", fdata, function () {
+	sendXHR("POST", "/bots", fdata, function (xhr) {
 		return function () {
 			if (xhr.status == 200) {
 				updateTable();

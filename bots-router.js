@@ -16,10 +16,10 @@ function botsSubapp() {
 
     cleanSources();
 
-    function getBotNames(res, req, next) {
+    function getBotNames(req, res, next) {
         let botList2 = {};
         for (let i in botList) {
-            botList2[i].path = util.getShortName(botList[i].path);
+            botList2[i] = {path: util.getShortName(botList[i].path)};
         }
         res.status(200).json(botList2);
     };
@@ -34,27 +34,15 @@ function botsSubapp() {
             return;
         }
         fs.renameSync(req.files[util.INPUT_NAME].path, fname);
-        botList[req.files["bot-name"]] = { path: fname };
+        botList[req.body["bot-name"]] = { path: fname };
         util.myLog("Received bot source successfully");
     };
 
     function cleanSources(req, res, next) {
-        let toDel = [];
-
-        for (let i in botList) {
-            fs.unlink(botList[i].path, (err) => {
-                if (err) {
-                    util.myLog("error unlinking file " + botList[i].path);
-                } else {
-                    toDel.push(i);
-                }
-            });
-        }
-
-        for (let i in toDel) {
-            if (botList[toDel[i]]) {
-                delete botList[i];
-            }
+        botList = {};
+        let fnames = fs.readdirSync(util.DIRS.uploadedSrc);
+        for(let i in fnames){
+            fs.unlinkSync(path.join(util.DIRS.uploadedSrc, fnames[i]));
         }
     };
 
@@ -74,7 +62,7 @@ function botsSubapp() {
             header += "#define BOT_" + i + " " +
                 util.withoutExt(util.getShortName(botList[mas[i]].path)) + "\n";
         }
-        for (; i < mas[0]; i++) {
+        for (; i <= mas[0]; i++) {
             header += "#define BOT_" + i + " " + "game_module::Bot \n";
         }
         fs.writeFileSync(headerPath, header);
@@ -87,15 +75,18 @@ function botsSubapp() {
     };
 
     function startGame(req, res, next) {
-        let mas = req.files["content"].split(" ");
+        let mas = req.body["content"].split(" ");
         setHeader(mas);
 
-        process.env.BOT_SOURCES = getSourcesList("arch");
+        process.env.BOT_SOURCES = getSourcesList(util.DIRS.uploadedSrc);
         let buildCode = buildGame();
         if (buildCode == 1) {
             res.status(500).send("compile_error");
             return;
         } else if (buildCode == 127) {
+            res.status(500).send("cmake_not_found");
+            return;
+        }else {
             res.status(500).send("cmake_not_found");
             return;
         }
@@ -109,13 +100,13 @@ function botsSubapp() {
             util.myLog("WARNING: tried to access without XHR");
             return;
         }
-        if (req.files["command"] === "clean") {
+        if (req.body["command"] === "clean") {
             cleanSources();
             res.sendStatus(200);
-        } else if (req.files["command"] === "add") {
+        } else if (req.body["command"] === "add") {
             addSource(req, res, next);
             res.sendStatus(200);
-        } else if (req.files["command"] === "start") {
+        } else if (req.body["command"] === "start") {
             startGame(req, res, next);
         }
     };

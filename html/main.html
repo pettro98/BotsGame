@@ -19,11 +19,11 @@
 		<input id="botName" required="" placeholder="Enter friendly name">
 		</p>
 		<p>
-		<input id="countElem" required="" placeholder="Enter number of bots">
+			<input id="countElem" required="" placeholder="Enter number of bots">
 		</p>
 		<p>
 			<input id="sendButton" onclick="upload();" value="Send" style="width: 8vh;" type="submit">
-			<input id="startButton" onclick="startGame();" value="Start game" disabled="" type="submit">
+			<input id="startButton" onclick="startGame();" value="Start game" type="submit">
 			<input id="cleanButton" onclick="cleanSources();" value="Clean sources" type="submit">
 		</p>
 		<p>
@@ -39,8 +39,12 @@
 		</p>
 		<table id="botsTable" border-color="black" width="200" border="2"></table>
 		<p>
-			RULES OF UPLOADING FILES:
-			1. Name of your file and friendly name must be unique
+			<b>
+				RULES:
+				<br> 1. Name of your file and friendly name must be unique
+				<br> 2. Name of your file must be equal to yorr bot class name or it will result in compilation error
+				<br> 3. If you want to be redirected to game page you must allow popup windows in your browser
+			</b>
 		</p>
 	</div>
 
