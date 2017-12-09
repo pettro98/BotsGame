@@ -42,6 +42,11 @@ namespace game_module
 		return out;
 	}
 
+	bool is_type(unit_type type)
+	{
+		return true;
+	}
+
 	bool is_none(unit_type type)
 	{
 		return type == game_module::unit_type::none;
@@ -161,9 +166,8 @@ namespace game_module
 	}
 
 	Result::Result()
-		: winner(-1)
+		: winner(game_module::hex_color::black)
 	{
-		points.resize(6);
 		last_turn.resize(6);
 		built_armies.resize(6);
 		built_farms.resize(6);

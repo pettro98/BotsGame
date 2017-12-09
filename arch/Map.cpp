@@ -55,12 +55,20 @@ namespace game_module
 
 	hex_color Map::color(const Pair & hex) const
 	{
-		return (*this)(hex)->color();
+		if ((*this)(hex) != nullptr)
+		{
+			return (*this)(hex)->color();
+		}
+		return game_module::hex_color::black;
 	}
 
 	unit_type Map::type(const Pair & hex) const
 	{
-		return (*this)(hex)->get_hex_unit_type();
+		if ((*this)(hex) != nullptr)
+		{
+			return (*this)(hex)->get_unit_type();
+		}
+		return game_module::unit_type::none;
 	}
 
 	bool Map::hex_exist(const Pair & hex) const
@@ -390,7 +398,7 @@ namespace game_module
 				for (auto & j : get_neighbours(i,
 					[basic_color](hex_color color) { return color == basic_color; }))
 				{
-					if ((*this)(j)->get_hex_capital() == (*this)(hex)->get_hex_capital())
+					if ((*this)(j)->get_capital() == (*this)(hex)->get_capital())
 					{
 						result.push_back(i);
 						break;
@@ -400,7 +408,7 @@ namespace game_module
 			for (auto & i : get_hex_row(hex, radius,
 				[basic_color](hex_color color) { return color == basic_color; }))
 			{
-				if ((*this)(i)->get_hex_capital() == (*this)(hex)->get_hex_capital())
+				if ((*this)(i)->get_capital() == (*this)(hex)->get_capital())
 				{
 					incomplete = true;
 					break;
@@ -415,7 +423,7 @@ namespace game_module
 		std::function <bool(unit_type)> compare) const
 	{
 		std::vector<Pair> result;
-		if ((*this)(hex)->get_hex_capital() == nullptr)
+		if (hex_exist(hex) && (*this)(hex)->get_capital() == nullptr)
 		{
 			return result;
 		}
@@ -428,7 +436,7 @@ namespace game_module
 			for (auto & i : get_hex_row(hex, radius,
 				[basic_color](hex_color color) { return color == basic_color; }))
 			{
-				if ((*this)(hex)->get_hex_capital() == (*this)(i)->get_hex_capital())
+				if ((*this)(hex)->get_capital() == (*this)(i)->get_capital())
 				{
 					if (compare(type(i)))
 					{
@@ -446,7 +454,7 @@ namespace game_module
 		std::function <bool(unit_type)> compare) const
 	{
 		size_type result(0);
-		if ((*this)(hex)->get_hex_capital() == nullptr)
+		if ((*this)(hex)->get_capital() == nullptr)
 		{
 			return result;
 		}
@@ -459,7 +467,7 @@ namespace game_module
 			for (auto & i : get_hex_row(hex, radius,
 				[basic_color](hex_color color) { return color == basic_color; }, compare))
 			{
-				if ((*this)(hex)->get_hex_capital() == (*this)(i)->get_hex_capital())
+				if ((*this)(hex)->get_capital() == (*this)(i)->get_capital())
 				{
 					++result;
 				}
@@ -628,7 +636,7 @@ namespace game_module
 			}
 			for (auto & i : capitals)
 			{
-				(*this)(i)->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(i)->set_unit(unit_factory(game_module::unit_type::capital));
 			}
 			return;
 		}
@@ -666,27 +674,27 @@ namespace game_module
 			Root = root;
 			if (MapType == "classic")
 			{
-				(*this)(Pair(3, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital));
-				(*this)(Pair(3, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital));
-				(*this)(Pair(DimensionX - 4, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital));
-				(*this)(Pair(DimensionX - 4, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(3, 3))->set_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(3, DimensionY - 4))->set_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX - 4, 3))->set_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX - 4, DimensionY - 4))->set_unit(unit_factory(game_module::unit_type::capital));
 				for (size_type i = 0; i < 3; ++i)
 				{
 					for (auto & j : get_hex_row(Pair(DimensionX / 2, DimensionY / 2), i))
 					{
-						(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::pine));
+						(*this)(j)->set_unit(unit_factory(game_module::unit_type::pine));
 					}
 				}
 			}
 			else if (MapType == "duel")
 			{
-				(*this)(Pair(DimensionX / 2, 3))->set_hex_unit(unit_factory(game_module::unit_type::capital));
-				(*this)(Pair(DimensionX / 2, DimensionY - 4))->set_hex_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX / 2, 3))->set_unit(unit_factory(game_module::unit_type::capital));
+				(*this)(Pair(DimensionX / 2, DimensionY - 4))->set_unit(unit_factory(game_module::unit_type::capital));
 				for (size_type i = 0; i < 3; ++i)
 				{
 					for (auto & j : get_hex_row(Pair(DimensionX / 2, DimensionY / 2), i))
 					{
-						(*this)(j)->set_hex_unit(unit_factory(game_module::unit_type::pine));
+						(*this)(j)->set_unit(unit_factory(game_module::unit_type::pine));
 					}
 				}
 			}
@@ -710,7 +718,7 @@ namespace game_module
 	{
 		HANDLE hSTDOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		int colors[8] = {0x0007, 0x0004, 0x0002, 0x0003, 0x0005, 0x0001, 0x0006, 0x0000 };
-		char type[8] = {'0', '1', '2', 'C', 'f', '?', '?', 'G'};
+		char type[8] = {'0', '1', 't', 'C', 'f', '?', '?', 'G'};
 		for (size_type i = 0; i < map.dimension_y(); ++i)
 		{		
 			for (size_type j = 0; j < map.dimension_x(); ++j)
@@ -733,13 +741,13 @@ namespace game_module
 					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
 					std::cout << "/";
 					SetConsoleTextAttribute(hSTDOut, colors[map(j, i)->color()] | FOREGROUND_INTENSITY);
-					if (is_army(map(j, i)->get_hex_unit_type()))
+					if (is_army(map(j, i)->get_unit_type()))
 					{
-						std::cout << map(j, i)->get_hex_unit()->strength();
+						std::cout << map(j, i)->get_unit()->strength();
 					}
-					else if (is_tower(map(j, i)->get_hex_unit_type()))
+					else if (is_tower(map(j, i)->get_unit_type()))
 					{
-						if (map(j, i)->get_hex_unit()->strength() == 2)
+						if (map(j, i)->get_unit()->strength() == 2)
 						{
 							std::cout << 't';
 						}
@@ -750,7 +758,7 @@ namespace game_module
 					}
 					else
 					{
-						std::cout << type[map(j, i)->get_hex_unit_type()];
+						std::cout << type[map(j, i)->get_unit_type()];
 					}
 					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
 					std::cout << char(0x5c);
@@ -765,14 +773,14 @@ namespace game_module
 					else
 					{
 						SetConsoleTextAttribute(hSTDOut, colors[map(j + 1, i - 1)->color()] | FOREGROUND_INTENSITY);
-						if (is_army(map(j + 1, i - 1)->get_hex_unit_type()))
+						if (is_army(map(j + 1, i - 1)->get_unit_type()))
 						{
-							std::cout << map(j + 1, i - 1)->get_hex_unit()->strength();
+							std::cout << map(j + 1, i - 1)->get_unit()->strength();
 
 						}
-						else if (is_tower(map(j + 1, i - 1)->get_hex_unit_type()))
+						else if (is_tower(map(j + 1, i - 1)->get_unit_type()))
 						{
-							if (map(j + 1, i - 1)->get_hex_unit()->strength() == 2)
+							if (map(j + 1, i - 1)->get_unit()->strength() == 2)
 							{
 								std::cout << 't';
 							}
@@ -783,7 +791,7 @@ namespace game_module
 						}
 						else
 						{
-							std::cout << type[map(j + 1, i - 1)->get_hex_unit_type()];
+							std::cout << type[map(j + 1, i - 1)->get_unit_type()];
 						}
 					}
 				}
@@ -813,13 +821,13 @@ namespace game_module
 					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
 					std::cout << char(0x5c);
 					SetConsoleTextAttribute(hSTDOut, colors[map(j, i)->color()] | FOREGROUND_INTENSITY);
-					if (is_army(map(j, i)->get_hex_unit_type()))
+					if (is_army(map(j, i)->get_unit_type()))
 					{
-						std::cout << map(j, i)->get_hex_unit()->strength();
+						std::cout << map(j, i)->get_unit()->strength();
 					}
-					else if (is_tower(map(j, i)->get_hex_unit_type()))
+					else if (is_tower(map(j, i)->get_unit_type()))
 					{
-						if (map(j, i)->get_hex_unit()->strength() == 2)
+						if (map(j, i)->get_unit()->strength() == 2)
 						{
 							std::cout << 't';
 						}
@@ -830,7 +838,7 @@ namespace game_module
 					}
 					else
 					{
-						std::cout << type[map(j, i)->get_hex_unit_type()];
+						std::cout << type[map(j, i)->get_unit_type()];
 					}
 					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
 					std::cout << "/";
@@ -845,14 +853,14 @@ namespace game_module
 					else
 					{
 						SetConsoleTextAttribute(hSTDOut, colors[map(j + 1, i)->color()] | FOREGROUND_INTENSITY);
-						if (is_army(map(j + 1, i)->get_hex_unit_type()))
+						if (is_army(map(j + 1, i)->get_unit_type()))
 						{
-							std::cout << map(j + 1, i)->get_hex_unit()->strength();
+							std::cout << map(j + 1, i)->get_unit()->strength();
 
 						}
-						else if (is_tower(map(j + 1, i)->get_hex_unit_type()))
+						else if (is_tower(map(j + 1, i)->get_unit_type()))
 						{
-							if (map(j + 1, i)->get_hex_unit()->strength() == 2)
+							if (map(j + 1, i)->get_unit()->strength() == 2)
 							{
 								std::cout << 't';
 							}
@@ -863,7 +871,7 @@ namespace game_module
 						}
 						else
 						{
-							std::cout << type[map(j + 1, i)->get_hex_unit_type()];
+							std::cout << type[map(j + 1, i)->get_unit_type()];
 						}
 					}
 				}
@@ -874,6 +882,13 @@ namespace game_module
 			}
 			std::cout << std::endl;		
 		}	
+	}
+
+	HexImpress::HexImpress(const Hex & hex)
+		: Coordinates(hex.coordinates())
+		, Color(hex.color())
+	{
+		UnitType = hex.get_unit_type();
 	}
 
 	MapImpress::~MapImpress()
@@ -905,15 +920,16 @@ namespace game_module
 		Root = root;
 	}
 
-	HexImpress & MapImpress::operator () (const Pair & pair)
+	HexImpress & MapImpress::operator () (const Pair & hex)
 	{
-		return *Root[pair.First][pair.Second];
-	}
-
-	HexImpress::HexImpress(const Hex & hex)
-		: Coordinates(hex.coordinates())
-		, Color(hex.color())
-	{
-		UnitType = hex.get_hex_unit_type();
+		if (hex.First > 0 && hex.Second > 0 && hex.First < DimensionX - 1
+			&& hex.Second < DimensionY - 1)
+		{
+			return *Root[hex.First][hex.Second];
+		}
+		Hex buf(0, 0);
+		buf.set_color(game_module::hex_color::black);
+		HexImpress result(buf);
+		return result;
 	}
 }

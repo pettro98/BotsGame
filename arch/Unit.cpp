@@ -31,7 +31,9 @@ namespace game_module
 			switch (type)
 			{
 			case game_module::unit_type::none:
+			{
 				break;
+			}
 			case game_module::unit_type::army:
 			{
 				if (strength >= 1 && strength <= 4)
@@ -135,7 +137,7 @@ namespace game_module
 
 		void Army::die()
 		{
-			Field->set_hex_unit(unit_factory(game_module::unit_type::grave));
+			Field->set_unit(unit_factory(game_module::unit_type::grave));
 		}
 
 		Tower::Tower(Hex * hex, size_type strength)
@@ -219,23 +221,23 @@ namespace game_module
 
 		void Capital::change_district_income(Hex * hex)
 		{
-			if (hex->get_hex_capital() == this)
+			if (hex->get_capital() == this)
 			{
 				DistrictIncome -= 1;
-				if (is_static(hex->get_hex_unit_type()))
+				if (is_static(hex->get_unit_type()))
 				{
-					DistrictIncome += 2;
+					DistrictIncome += Tree::income();
 				}
-				else if (is_player_unit(hex->get_hex_unit_type()))
+				else if (is_player_unit(hex->get_unit_type()))
 				{
-					if (is_farm(hex->get_hex_unit_type()))
+					if (is_farm(hex->get_unit_type()))
 					{
 						DistrictIncome -= Farm::income();
 					}
-					else if (is_army(hex->get_hex_unit_type()) 
-						|| is_tower(hex->get_hex_unit_type()))
+					else if (is_army(hex->get_unit_type()) 
+						|| is_tower(hex->get_unit_type()))
 					{
-						DistrictIncome += hex->get_hex_unit()->cost();
+						DistrictIncome += hex->get_unit()->cost();
 					}
 				}
 			}
@@ -294,12 +296,12 @@ namespace game_module
 			return TurnsFromDouble >= turns_to_double();
 		}
 
-		void Tree::has_doubled() // обнуляет turns_from_double
+		void Tree::has_doubled()
 		{
 			TurnsFromDouble = 0;
 		}
 
-		void Tree::operator ++() // ++turns_from_double
+		void Tree::operator ++()
 		{
 			++TurnsFromDouble;
 		}
@@ -308,7 +310,7 @@ namespace game_module
 			: Tree(hex)
 		{ }
 
-		size_type Palm::turns_to_double() const // возвращает срок за который размножается данный тип
+		size_type Palm::turns_to_double() const
 		{
 			return 1;
 		}
@@ -322,7 +324,7 @@ namespace game_module
 			: Tree(hex)
 		{ }
 
-		size_type Pine::turns_to_double() const // возвращает срок за который размножается данный тип
+		size_type Pine::turns_to_double() const
 		{
 			return 3;
 		}

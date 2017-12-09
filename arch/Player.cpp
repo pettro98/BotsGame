@@ -197,18 +197,6 @@ namespace game_module
 		return GameController->get_hex_row_exist(hex, radius, compare1, compare2);
 	}
 
-	std::vector<Pair> Player::easy_solve_maze(const Pair & hex,
-		std::function <bool(unit_type)> compare) const
-	{
-		return GameController->easy_solve_maze(hex, compare);
-	}
-
-	size_type Player::easy_solve_maze_count(const Pair & hex,
-		std::function <bool(unit_type)> compare) const
-	{
-		return GameController->easy_solve_maze_count(hex, compare);
-	}
-
 	std::vector<Pair> Player::get_internal_border(const Pair & hex,
 		std::function <bool(unit_type)> compare) const
 	{
@@ -220,6 +208,18 @@ namespace game_module
 		std::function <bool(unit_type)> compare2) const
 	{
 		return GameController->get_external_border(hex, compare1, compare2);
+	}
+
+	std::vector<Pair> Player::easy_solve_maze(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return GameController->easy_solve_maze(hex, compare);
+	}
+
+	size_type Player::easy_solve_maze_count(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return GameController->easy_solve_maze_count(hex, compare);
 	}
 
 	size_type Player::get_farm_cost(const Pair & hex) const

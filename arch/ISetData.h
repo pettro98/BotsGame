@@ -5,19 +5,82 @@
 
 namespace game_module
 {
+	/*!
+	\brief Абстрактный класс содержит методы для изменения данных.
+	- Класс Game косвенно наследует данный класс. Только класс Game переопределяет методы этого класса.
+	- Для получения подробной информации о реализации методов следует изучить описание переопределенных 
+	методов класса Game.
+	*/
 	class ISetData
 	{
 	public:
+		/*!
+		\brief Чисто виртуальный метод устанавливает в гекс с переданными координатами переданного юнита.
+
+		\param hex Координаты гекса, в который необходимо установить юнит.
+		\param unit Указатель на юнит, который необходимо установить в гекс.
+		*/
 		virtual void set_unit(const Pair & hex, Unit * unit) = 0;
+		/*!
+		\brief Чисто виртуальный метод заменяет цвет гекса с переданными координатами на переданный.
+
+		\param hex Координаты гекса, цвет которого необходимо заменить.
+		\param new_color Цвет, в который необходимо покрасить гекс.
+		*/
 		virtual void set_color(const Pair & hex, hex_color new_color) = 0;
+		/*!
+		\brief Чисто виртуальный метод сигнализирующий объекту класса, что прошел один игровой ход.
+		*/
 		virtual void turn_passed() = 0;
+		/*!
+		\brief Чисто виртуальный метод устанавливает в поле CurrentPlayer объекта класса переданный цвет.
+
+		\param new_color Цвет, на который необходимо заменить значение поля CurrentPlayer объекта класса.
+		*/
 		virtual void set_current_player(hex_color new_color) = 0;
-		virtual void add_points(size_type player_color, size_type points) = 0;
-		virtual void set_winner(size_type player_color) = 0;
-		virtual void set_last_turn(size_type player_color, size_type turn) = 0;
-		virtual void add_to_built_armies(size_type player_color, size_type str = 1) = 0;
-		virtual void add_to_built_farms(size_type player_color) = 0;
-		virtual void add_to_built_towers(size_type player_color, size_type str = 1) = 0;
-		virtual void add_to_moves(size_type player_color) = 0;
+		/*!
+		\brief Чисто виртуальный метод устанавливает переданный цвет как цвет победителя игры.
+
+		\param player_color Цвет игрока, победившего в данной игре.
+		*/
+		virtual void set_winner(hex_color player_color) = 0;
+		/*!
+		\brief Чисто виртуальный метод устанавливает последний игровой ход игрока переданного цвета.
+
+		\param player_color Цвет игрока чей последний игровой ход устанавливается. 
+		\param turn Номер последнего игрового хода игрока переданного цвета.
+		*/
+		virtual void set_last_turn(hex_color player_color, size_type turn) = 0;
+		/*!
+		\brief Чисто виртуальный метод увеличивает счётчик суммарной силы всех армий, построенных игроком переданного цвета
+		за игру, на переданное значение.
+
+		\param player_color Цвет игрока чей счётчик увеличивается.
+		\param str Число, на которое увеличивается счётчик игрока переданного цвета. Значение по умолчанию 1.
+		*/
+		virtual void add_to_built_armies(hex_color player_color, size_type str = 1) = 0;
+		/*!
+		\brief Чисто виртуальный метод инкрементирует счётчик кол-ва ферм,
+		построенных игроком переданного цвета за игру.
+
+		\param player_color Цвет игрока чей счётчик увеличивается.
+		*/
+		virtual void add_to_built_farms(hex_color player_color) = 0;
+		/*!
+		\brief Чисто виртуальный метод увеличивает счётчик суммарной силы всех башен,
+		построенных игроком переданного цвета
+		за игру, на переданное значение.
+
+		\param player_color Цвет игрока чей счётчик увеличивается.
+		\param str Число, на которое увеличивается счётчик игрока переданного цвета. Значение по умолчанию 2.
+		*/
+		virtual void add_to_built_towers(hex_color player_color, size_type str = 2) = 0;
+		/*!
+		\brief Чисто виртуальный метод увеличивает счётчик кол-ва совершенных перемещений юнитов 
+		игроком переданного цвета за игру на 1.
+
+		\param player_color Цвет игрока чей счётчик увеличивается.
+		*/
+		virtual void add_to_moves(hex_color player_color) = 0;
 	};
 }

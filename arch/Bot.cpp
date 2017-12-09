@@ -1,6 +1,7 @@
 #include "Bot.h"
 #include <string>
 #include <algorithm> 
+#include <map>
 
 namespace game_module
 {

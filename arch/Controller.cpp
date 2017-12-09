@@ -1,4 +1,5 @@
 #include "Controller.h"
+#include <map>
 
 
 namespace game_module
@@ -19,9 +20,9 @@ namespace game_module
 
 	Pair Controller::capital(const Pair & hex) const
 	{
-		if ((*MyAccess)(hex)->get_hex_capital() != nullptr)
+		if ((*MyAccess)(hex)->get_capital() != nullptr)
 		{
-			return (*MyAccess)(hex)->get_hex_capital()->coordinates();
+			return (*MyAccess)(hex)->get_capital()->coordinates();
 		}
 		return Pair(0, 0);
 	}
@@ -35,7 +36,7 @@ namespace game_module
 	{
 		if ((*MyAccess)(hex) != nullptr)
 		{
-			return (*MyAccess)(hex)->get_hex_unit_type();
+			return (*MyAccess)(hex)->get_unit_type();
 		}
 		return game_module::unit_type::none;
 	}
@@ -394,18 +395,6 @@ namespace game_module
 		return MyAccess->get_game_map().get_hex_row_exist(hex, radius, compare1, compare2);
 	}
 
-	std::vector<Pair> Controller::easy_solve_maze(const Pair & hex,
-		std::function <bool(unit_type)> compare) const
-	{
-		return MyAccess->get_game_map().easy_solve_maze(hex, compare);
-	}
-
-	size_type Controller::easy_solve_maze_count(const Pair & hex,
-		std::function <bool(unit_type)> compare) const
-	{
-		return MyAccess->get_game_map().easy_solve_maze_count(hex, compare);
-	}
-
 	std::vector<Pair> Controller::get_internal_border(const Pair & hex,
 		std::function <bool(unit_type)> compare) const
 	{
@@ -417,6 +406,18 @@ namespace game_module
 		std::function <bool(unit_type)> compare2) const
 	{
 		return MyAccess->get_game_map().get_external_border(hex, compare1, compare2);
+	}
+
+	std::vector<Pair> Controller::easy_solve_maze(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return MyAccess->get_game_map().easy_solve_maze(hex, compare);
+	}
+
+	size_type Controller::easy_solve_maze_count(const Pair & hex,
+		std::function <bool(unit_type)> compare) const
+	{
+		return MyAccess->get_game_map().easy_solve_maze_count(hex, compare);
 	}
 
 	size_type Controller::get_farm_cost(const Pair & hex) const
@@ -474,7 +475,7 @@ namespace game_module
 					get_capital(end)->change_farms_number(-1);
 				}
 			}
-			(*MyAccess)(end)->set_hex_capital((*MyAccess)(start));
+			(*MyAccess)(end)->set_capital((*MyAccess)(start));
 			if (color(end) != color(start))
 			{
 				bool need_correct = false;
@@ -485,9 +486,9 @@ namespace game_module
 					MyAccess->get_player(basic_color)->remove_capital(end);
 					need_correct = true;
 				}
-				(*MyAccess)(end)->set_hex_unit((*MyAccess)(start)->get_hex_unit());
-				static_cast<Army *>((*MyAccess)(end)->get_hex_unit())->set_moved(true);
-				(*MyAccess)(start)->remove_hex_unit();
+				(*MyAccess)(end)->set_unit((*MyAccess)(start)->get_unit());
+				static_cast<Army *>((*MyAccess)(end)->get_unit())->set_moved(true);
+				(*MyAccess)(start)->remove_unit();
 				hex_color new_color = color(start);
 				std::vector<std::set<Pair>> to_correct = hexs_to_correct(end, new_color);
 				if (!to_correct[1].empty())
@@ -525,7 +526,7 @@ namespace game_module
 		}
 		else
 		{
-			(*MyAccess)(hex)->set_hex_unit(unit_factory(tower, strength));
+			(*MyAccess)(hex)->set_unit(unit_factory(tower, strength));
 			get_capital(hex)->change_district_money(-get_tower_cost(strength));
 			get_capital(hex)->change_district_income(Tower::income(strength));
 			MyAccess->add_to_built_towers(MyAccess->get_current_player(), strength);
@@ -542,9 +543,9 @@ namespace game_module
 		}
 		else
 		{
-			(*MyAccess)(hex)->set_hex_unit(unit_factory(game_module::unit_type::farm));
+			(*MyAccess)(hex)->set_unit(unit_factory(game_module::unit_type::farm));
 			get_capital(hex)->change_farms_number(1);
-			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_farm_cost(hex));
+			(*MyAccess)(hex)->get_capital()->change_district_money(-get_farm_cost(hex));
 			get_capital(hex)->change_district_income(Farm::income());
 			MyAccess->add_to_built_farms(MyAccess->get_current_player());
 			return true;
@@ -565,7 +566,7 @@ namespace game_module
 			}
 			if (is_army(get_type(hex)))
 			{
-				static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())
+				static_cast<Army *>((*MyAccess)(hex)->get_unit())
 					->set_strength(strength + get_unit_strength(hex));
 				get_capital(hex)->change_district_income(-Army::income(get_unit_strength(hex)));
 				get_capital(hex)->change_district_income(Army::income(strength + get_unit_strength(hex)));
@@ -578,14 +579,14 @@ namespace game_module
 					get_capital(hex)->change_district_income(-Tree::income());
 					change_moved = true;
 				}
-				(*MyAccess)(hex)->set_hex_unit(unit_factory(game_module::unit_type::army, strength));
+				(*MyAccess)(hex)->set_unit(unit_factory(game_module::unit_type::army, strength));
 				if (change_moved)
 				{
-					static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())->set_moved(true);
+					static_cast<Army *>((*MyAccess)(hex)->get_unit())->set_moved(true);
 				}
 				get_capital(hex)->change_district_income(Army::income(strength));
 			}
-			(*MyAccess)(hex)->get_hex_capital()->change_district_money(-get_army_cost(strength));
+			(*MyAccess)(hex)->get_capital()->change_district_money(-get_army_cost(strength));
 			MyAccess->add_to_built_armies(MyAccess->get_current_player(), strength);
 		}
 		else
@@ -611,7 +612,7 @@ namespace game_module
 			{
 				get_capital(hex)->change_district_income((*MyAccess)(hex));
 			}
-			(*MyAccess)(hex)->set_hex_capital((*MyAccess)(basic_district));
+			(*MyAccess)(hex)->set_capital((*MyAccess)(basic_district));
 			bool need_correct = false;
 			hex_color basic_color = color(hex);
 			(*MyAccess)(hex)->set_color(MyAccess->get_current_player());
@@ -620,8 +621,8 @@ namespace game_module
 				MyAccess->get_player(basic_color)->remove_capital(hex);
 				need_correct = true;
 			}
-			(*MyAccess)(hex)->set_hex_unit(unit_factory(game_module::unit_type::army, strength));
-			static_cast<Army *>((*MyAccess)(hex)->get_hex_unit())->set_moved(true);
+			(*MyAccess)(hex)->set_unit(unit_factory(game_module::unit_type::army, strength));
+			static_cast<Army *>((*MyAccess)(hex)->get_unit())->set_moved(true);
 			std::vector<std::set<Pair>> to_correct = hexs_to_correct(hex, MyAccess->get_current_player());
 			if (!to_correct[1].empty())
 			{
@@ -653,7 +654,7 @@ namespace game_module
 	{
 		if ((*MyAccess)(hex) != nullptr && (*MyAccess)(hex)->occupied())
 		{
-			return (*MyAccess)(hex)->get_hex_unit();
+			return (*MyAccess)(hex)->get_unit();
 		}
 		return nullptr;
 	}
@@ -662,7 +663,7 @@ namespace game_module
 	{
 		if ((*MyAccess)(hex) != nullptr)
 		{
-			return (*MyAccess)(hex)->get_hex_capital();
+			return (*MyAccess)(hex)->get_capital();
 		}
 		return nullptr;
 	}
@@ -678,9 +679,9 @@ namespace game_module
 				{
 					MyAccess->get_player(color(hex))->remove_capital(hex);
 				}
-				(*MyAccess)(hex)->remove_hex_unit();
+				(*MyAccess)(hex)->remove_unit();
 			}
-			(*MyAccess)(hex)->set_hex_capital(nullptr);
+			(*MyAccess)(hex)->set_capital(nullptr);
 			return;
 		}
 		std::vector<Pair> district_capitals;
@@ -712,7 +713,7 @@ namespace game_module
 					}
 				}
 			}			
-			(*MyAccess)(new_capital)->set_hex_unit(unit_factory(game_module::unit_type::capital));
+			(*MyAccess)(new_capital)->set_unit(unit_factory(game_module::unit_type::capital));
 			MyAccess->get_player(color(hex))->add_capital(new_capital);
 		}
 		else if (district_capitals.size() > 1)
@@ -725,14 +726,14 @@ namespace game_module
 					continue;
 				}
 				MyAccess->get_player(color(hex))->remove_capital(i);
-				static_cast<Capital *>((*MyAccess)(new_capital)->get_hex_unit())
+				static_cast<Capital *>((*MyAccess)(new_capital)->get_unit())
 					->change_district_money(get_district_money(i));
-				(*MyAccess)(i)->delete_hex_unit();
+				(*MyAccess)(i)->delete_unit();
 			}
 		}	
 		for (auto & i : district)
 		{
-			(*MyAccess)(i)->set_hex_capital((*MyAccess)(new_capital));
+			(*MyAccess)(i)->set_capital((*MyAccess)(new_capital));
 		}
 		if (district.size() > 1)
 		{

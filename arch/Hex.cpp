@@ -27,27 +27,28 @@ namespace game_module
 		return Color;
 	}
 
-	unit_type Hex::get_hex_unit_type() const
+	unit_type Hex::get_unit_type() const
 	{
 		if (HexUnit == nullptr)
-			return none;
-		else
-			return HexUnit->type();
+		{
+			return game_module::unit_type::none;
+		}
+		return HexUnit->type();
 	}
 
-	Unit * Hex::get_hex_unit()
+	Unit * Hex::get_unit()
 	{
 		return HexUnit;
 	}
 
-	Capital * Hex::get_hex_capital()
+	Capital * Hex::get_capital()
 	{
 		return HexCapital;
 	}
 
 	bool Hex::occupied() const
 	{
-		return (HexUnit);
+		return HexUnit != nullptr;
 	}
 
 	bool Hex::operator == (const Hex & hex) const
@@ -60,35 +61,35 @@ namespace game_module
 		Color = new_color;
 	}
 
-	void Hex::set_hex_unit(Unit * unit)
+	void Hex::set_unit(Unit * unit)
 	{
 		delete HexUnit;
 		HexUnit = unit;
 		HexUnit->set_hex(this);
 	}
 
-	void Hex::set_hex_capital(Hex * new_capital)
+	void Hex::set_capital(Hex * new_capital)
 	{
 		if (new_capital == nullptr)
 		{
 			HexCapital = nullptr;
 		}
-		else if (new_capital->get_hex_unit_type() == capital)
+		else if (new_capital->get_unit_type() == capital)
 		{
-			HexCapital = static_cast<Capital *>(new_capital->get_hex_unit());
+			HexCapital = static_cast<Capital *>(new_capital->get_unit());
 		}
 		else
 		{
-			HexCapital = static_cast<Capital *>(new_capital->get_hex_capital());
+			HexCapital = static_cast<Capital *>(new_capital->get_capital());
 		}
 	}
 
-	void Hex::remove_hex_unit()
+	void Hex::remove_unit()
 	{
 		HexUnit = nullptr;
 	}
 
-	void Hex::delete_hex_unit()
+	void Hex::delete_unit()
 	{
 		delete HexUnit;
 		HexUnit = nullptr;
