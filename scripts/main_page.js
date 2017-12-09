@@ -1,16 +1,40 @@
 "use strict";
 
-const table = document.getElementById("bots_table");
-const errorMsg = document.getElementById("error_message");
-const uploadElement = document.getElementById("uploadButton");
-const errText = document.getElementById("err_text");
-const botmsg = document.getElementById("botmsg")
+const botsTable = document.getElementById("botsTable");
+const errorMsg = document.getElementById("errorMsg");
+const uploadElem = document.getElementById("uploadElem");
+const errText = document.getElementById("errText");
+const botMsg = document.getElementById("botMsg")
 
-const tableContents = { bots: [], checked: [] };
+const tableContents = { bots: [] };
 const XHR_TIMEOUT = 10000;
 const REQ_REPEAT_TIME = 13000;
 
 var is_requesting = false;
+
+function checkFileExt(file, ext) {
+	if (ext[0] != ".") {
+		ext = "." + ext;
+	}
+	return file.slice(-ext.length) == ext;
+}
+
+function sendXHR(method, url, data, onload, onerror, ontimeout) {
+	let xhr = new XMLHttpRequest();
+	xhr.open(method, url, true);
+	xhr.timeout = XHR_TIMEOUT;
+
+	xhr.onload = onload(xhr);
+	if (onerror) {
+		xhr.onerror = onerror(xhr);
+	}
+	if (ontimeout) {
+		xhr.ontimeout = ontimeout(xhr);
+	}
+
+	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+	xhr.send(data);
+}
 
 function addTableRow() {
 	let row = document.createElement("tr");
@@ -20,54 +44,45 @@ function addTableRow() {
 		mas.push(arguments[i]);
 	};
 	tableContents.bots.push(mas);
-	table.appendChild(row);
-	botmsg.innerHTML = "Currently uploaded bots: " + tableContents.bots.length;
-};
+	botsTable.appendChild(row);
+	botMsg.innerHTML = "Currently uploaded bots: " + tableContents.bots.length;
+}
 
-function clearTable(){
-	table.innerHTML = "";
+function clearTable() {
+	botsTable.innerHTML = "";
 	tableContents.bots = [];
-};
+}
 
-function fillTable(container){
-	for(let el in container){
+function fillTable(container) {
+	for (let el in container) {
 		addTableRow(container[el]);
 	};
-};
+}
 
-function refillTable(data){
-	if(data === null){
+function refillTable(data) {
+	if (data === null) {
 		// show error if needed
 		return;
 	};
 	clearTable();
 	fillTable(data);
-	if(tableContents.bots.length >= 2 || tableContents.bots.length <= 6){
+	let botCount = tableContents.bots.length;
+	if (botCount == 2 || botCount == 4 || botCount == 6) {
 		document.getElementById("startButton").removeAttribute("disabled");
-	}else{
+	} else {
 		document.getElementById("startButton").setAttribute("disabled", "");
 	}
-};
+}
 
 function updateTable() {
-	let xhr = new XMLHttpRequest();
-	xhr.open("GET", "/check_bots", true);
-	xhr.timeout = XHR_TIMEOUT;
-
-	xhr.onload = function(){
-		if(xhr.status == 200)
-		refillTable(JSON.parse(xhr.responseText));
-	};
-	xhr.onerror = function(){
-		// handle error
-	};
-	xhr.ontimeout = function (){
-		// handle timeout
-	};
-
-	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-	xhr.send();
-};
+	sendXHR("GET", "/check_bots", "", function (xhr) {
+		return function () {
+			if (xhr.status == 200) {
+				refillTable(JSON.parse(xhr.responseText));
+			}
+		}
+	});
+}
 
 // first load of table
 updateTable();
@@ -75,40 +90,31 @@ setInterval(updateTable, 5000);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function checkFileExt(file, ext){
-	if(ext[0] != "."){
-		ext = "." + ext;
-	}
-	return file.slice(-ext.length) == ext;
-};
 
-function upload(){
-    let fdata = new FormData();
-	let file = uploadElement.files[0];
+function upload() {
+	let fdata = new FormData();
+	let file = uploadElem.files[0];
 
-    fdata.append("sourceFile", file);
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", "upload_sources", true);
-	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-    xhr.onload = function(){
-        updateTable();
-    };
-    xhr.send(fdata);
-};
+	fdata.append("sourceFile", file);
 
-////////////////////////////////////////////////////////////////////////////////
+	sendXHR("POST", "/upload_sources", fdata, function () { return updateTable });
+}
 
-function startGame(){
-	let xhr = new XMLHttpRequest();
-	xhr.open("POST", "/game", true);
-	xhr.onload = function(){
-		stopAnimation();
-		if(xhr.status == 200){
-			window.open("/game");
-		} else {
-			// show error
+
+function startGame() {
+	startAnimation();
+	sendXHR("POST", "/game", "start", function (xhr) {
+		return function () {
+			stopAnimation();
+			if (xhr.status == 200) {
+				window.open("/game");
+			} else {
+				alert(xhr.responseText);
+			}
 		}
-	};
+	});
+}
 
-
+function cleanSources() {
+	sendXHR("POST", "/game", "clean", function () { return updateTable });
 }
