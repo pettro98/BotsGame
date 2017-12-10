@@ -510,6 +510,12 @@ namespace game_module
 					}
 				}
  			}
+			else
+			{
+				(*MyAccess)(end)->set_unit((*MyAccess)(start)->get_unit());
+				static_cast<Army *>((*MyAccess)(end)->get_unit())->set_moved(true);
+				(*MyAccess)(start)->remove_unit();
+			}
 			MyAccess->add_to_moves(MyAccess->get_current_player());
 			return true;
 		}
