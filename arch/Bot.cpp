@@ -53,7 +53,6 @@ namespace game_module
 			auto rule = custom_tower_sort(district_hexs);
 			for (size_type j = 0; j < rule.size(); ++j)
 			{
-
 				if (get_district_income(i) < 3 || get_district_money(i) < get_tower_cost(2)
 					|| money_limit > get_district_money(i))
 				{ 
@@ -154,7 +153,7 @@ namespace game_module
 		{
 			if (is_static(get_type(hex)))
 			{
-				result += 24;
+				result += 34;
 			}
 			else
 			{
@@ -174,16 +173,20 @@ namespace game_module
 		else
 		{
 			result += 24;
-			result += 8 * get_neighbours(hex,
+			result += 26 * get_neighbours(hex,
 				[basic_color](hex_color color) { return basic_color == color; },
 				is_farm).size();
 			if (is_army(get_type(hex)))
 			{
-				result += 4 * get_unit_strength(hex);
+				result += 8 * get_unit_strength(hex);
 			}
 			else if (is_farm(get_type(hex)))
 			{
-				result += 14;
+				result += 22;
+			}
+			else if (is_tower(get_type(hex)))
+			{
+				result += 1 + 8 * get_unit_strength(hex);
 			}
 		}
 		return result;
@@ -270,7 +273,8 @@ namespace game_module
 					result = i;
 				}
 			}
+			return make_move(hex, result);
 		}
-		return make_move(hex, result);
+		return false;
 	}
 }
