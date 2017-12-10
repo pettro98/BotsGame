@@ -19,7 +19,15 @@
 		<input id="botName" required="" placeholder="Enter friendly name">
 		</p>
 		<p>
-			<input id="countElem" required="" placeholder="Enter number of bots">
+			Select map type and number of bots:
+		</p>
+		<p>
+			<input type="radio" name="map" id="duel" onclick="setDuel();"> duel
+			<input type="radio" name="map" id="classic" onclick="setClassic();"> classic
+			<input type="radio" name="map" id="random" checked="" onclick="setRandom();"> random
+		</p>
+		<p>
+			<input id="countElem" required="" placeholder="Enter number of bots" value="6">
 		</p>
 		<p>
 			<input id="sendButton" onclick="upload();" value="Send" style="width: 8vh;" type="submit">
@@ -28,6 +36,8 @@
 		</p>
 		<p>
 			<text id="errText" hidden=""></text>
+			<br>
+			<a id="gameLink" href="/game" hidden="">Game is running now. Watch it here</a>
 		</p>
 	</div>
 	<div style="float: left;padding-left: 3vh;font-size: 2vh;">
@@ -44,6 +54,7 @@
 				<br> 1. Name of your file and friendly name must be unique
 				<br> 2. Name of your file must be equal to yorr bot class name or it will result in compilation error
 				<br> 3. If you want to be redirected to game page you must allow popup windows in your browser
+				<br> 4. All free space will be filled with developers' bots
 			</b>
 		</p>
 	</div>

@@ -71,3 +71,7 @@ util.DIRS = {
 	uploadedSrc: "uploaded_sources"
 }
 util.INPUT_NAME = "uploadElem";
+
+util.gameInProgress = false;
+
+util.botList = [];

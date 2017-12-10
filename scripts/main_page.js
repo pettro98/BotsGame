@@ -7,12 +7,36 @@ const errText = document.getElementById("errText");
 const botMsg = document.getElementById("botMsg");
 const botName = document.getElementById("botName");
 const countElem = document.getElementById("countElem");
+const gameLink = document.getElementById("gameLink");
+
+
+
 
 const tableContents = { bots: [] };
 const XHR_TIMEOUT = 10000;
 const REQ_REPEAT_TIME = 13000;
 
 var is_requesting = false;
+var mapType = "random";
+
+function setDuel(){
+	mapType = "duel";
+	countElem.value = "2";
+	countElem.setAttribute("disabled", "");
+};
+
+function setClassic(){
+	mapType = "classic";
+	countElem.value = "4";
+	countElem.setAttribute("disabled", "");
+};
+
+function setRandom(){
+	mapType = "random";
+	countElem.value = "6";
+	countElem.removeAttribute("disabled");
+}
+
 
 function checkFileExt(file, ext) {
 	if (ext[0] != ".") {
@@ -83,7 +107,13 @@ function updateTable() {
 	sendXHR("GET", "/bots", "", function (xhr) {
 		return function () {
 			if (xhr.status == 200) {
-				refillTable(JSON.parse(xhr.responseText));
+				let data = JSON.parse(xhr.responseText);
+				refillTable(data.table);
+				if(data.progress == true){
+					gameLink.removeAttribute("hidden");
+				}else{
+					gameLink.setAttribute("hidden");
+				}
 			}
 		}
 	});
@@ -106,6 +136,14 @@ function stopAnimation() {
 function upload() {
 	let fdata = new FormData();
 	let file = uploadElem.files[0];
+	if(!file){
+		alert("nothing to upload");
+		return;
+	}
+	if(botName.value == ""){
+		alert("no friendly name specified");
+		return;
+	}
 
 	for (let i in tableContents.bots) {
 		if (tableContents.bots[i][1] == botName.value) {
@@ -134,9 +172,10 @@ function startGame() {
 	startAnimation();
 	let form = new FormData();
 	form.append("command", "start");
+	form.append("map-type", mapType);
 
 	if (countElem.value > 6 || countElem.value < tableContents.bots.length) {
-		alert("wrong number of bots in the textfield");
+		alert("wrong number of bots");
 		return;
 	}
 

@@ -13,15 +13,16 @@ function botsSubapp() {
     let bots = require("express")();
 
     let botList = {};
+    util.gameInProgress = false;
 
     cleanSources();
 
     function getBotNames(req, res, next) {
         let botList2 = {};
         for (let i in botList) {
-            botList2[i] = {path: util.getShortName(botList[i].path)};
+            botList2[i] = { path: util.getShortName(botList[i].path) };
         }
-        res.status(200).json(botList2);
+        res.status(200).json({ table: botList2, progress: util.gameInProgress });
     };
 
     function addSource(req, res, next) {
@@ -35,13 +36,15 @@ function botsSubapp() {
         }
         fs.renameSync(req.files[util.INPUT_NAME].path, fname);
         botList[req.body["bot-name"]] = { path: fname };
+        util.botList.push(req.body["bot-name"]);
         util.myLog("Received bot source successfully");
     };
 
     function cleanSources(req, res, next) {
         botList = {};
+        util.botList = [];
         let fnames = fs.readdirSync(util.DIRS.uploadedSrc);
-        for(let i in fnames){
+        for (let i in fnames) {
             fs.unlinkSync(path.join(util.DIRS.uploadedSrc, fnames[i]));
         }
     };
@@ -86,11 +89,17 @@ function botsSubapp() {
         } else if (buildCode == 127) {
             res.status(500).send("cmake_not_found");
             return;
-        }else {
+        } else {
             res.status(500).send("cmake_not_found");
             return;
         }
 
+        exec.spawn("./_install/game " + req.body["map-type"])
+            .on("close", (code, signal) => {
+                util.gameInProgress = false;
+            });
+
+        util.gameInProgress = true;
         res.sendStatus(200);
     };
 
