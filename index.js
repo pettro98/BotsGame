@@ -166,7 +166,7 @@ function addBotSource(req, res, next) {
 	let name = req.files.source.name;
 	let path = req.files.source.path;
 	let fName = c.DIRS.botSrc + "/" + name;
-	if (fs.existsSync(fname)) {
+	if (fs.existsSync(fName)) {
 		fs.unlinkSync(path);
 		res.status(400).send("ERROR: File " + name + " already exists.");
 		u.log("ERROR: Cannot receive " + name + ". File already exists.");
@@ -179,7 +179,7 @@ function addBotSource(req, res, next) {
 
 function cleanBotSource(req, res) {
 	let bots = [];
-	if (req.body.bots == "") {
+	if (req.body.bots == "" || req.body.bots === undefined) {
 		bots = fs.readdirSync(c.DIRS.botSrc);
 	} else {
 		bots = req.body.bots.split(" ");

@@ -33,11 +33,11 @@ function cutExt(file) {
 }
 
 function cutPath(file) {
-	return file.substr(file.lastIndexOf(PATH_DELIM) + 1);
+	return file.substr(file.lastIndexOf(c.PATH_DELIM) + 1);
 }
 
 function cutPathExt(file) {
-	return cutPath(cutext(file));
+	return cutPath(cutExt(file));
 }
 
 function log(...args) {

@@ -18,6 +18,7 @@ const Table = document.getElementById("table");
 
 ////////////////////////////////////////////////////////////////////////////////
 
+var timeoutID = null;
 var tableData = {};
 var xhrRequests = {};
 var running = false;
@@ -39,11 +40,18 @@ function updateData() {
         let data = JSON.parse(xhr.responseText)
         refreshTable(data.bots);
         setRunning(data.runnning);
+        if(timeoutID !== null){
+            clearTimeout(timeoutID);
+        }
+        timeoutID = setTimeout(function () {
+            sendXHR("getBots", "GET", "/bots", null, 5000, onload);
+        }, 2000);
     }
 
     sendXHR("getBots", "GET", "/bots", null, 5000, onload);
 }
 
+updateData();
 
 function sendSource() {
     let file = Source.files[0];
@@ -59,7 +67,7 @@ function sendSource() {
     }
 
     let fdata = createFormData({
-        comand: "add",
+        command: "add",
         source: file
     });
 
