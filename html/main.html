@@ -2,66 +2,76 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
-	<title>AntiyoyBots</title>
-	<link rel="icon" href="/favicon.ico">
+    <meta charset="utf-8">
+    <title>AntiYoyBots</title>
+    <link rel="icon" href="/favicon.ico">
+    <script type="text/javascript">//setInterval(function () { location.reload() }, 1000);</script>
 </head>
 
 <body style="margin: 3vh;">
-	<div>
-		<text style="font-family: Consolas;font-size: 40pt;color: darkgreen;font-weight: bold;font-style: italic;">AntiYoyBots</text>
-	</div>
-	<div style="float: left;padding: 1vh;font-size: 2vh;">
-		<p>
-			<label for="uploadElem">You can upload your cpp file here:</label>
-		</p>
-		<input id="uploadElem" required="" style="margin-left: 1vh;font-size: 1.7vh;" type="file">
-		<input id="botName" required="" placeholder="Enter friendly name">
-		</p>
-		<p>
-			Select map type and number of bots:
-		</p>
-		<p>
-			<input type="radio" name="map" id="duel" onclick="setDuel();"> duel
-			<input type="radio" name="map" id="classic" onclick="setClassic();"> classic
-			<input type="radio" name="map" id="random" checked="" onclick="setRandom();"> random
-		</p>
-		<p>
-			<input id="countElem" required="" placeholder="Enter number of bots" value="6">
-		</p>
-		<p>
-			<input id="sendButton" onclick="upload();" value="Send" style="width: 8vh;" type="submit">
-			<input id="startButton" onclick="startGame();" value="Start game" type="submit">
-			<input id="cleanButton" onclick="cleanSources();" value="Clean sources" type="submit">
-		</p>
-		<p>
-			<text id="errText" hidden=""></text>
-			<br>
-			<a id="gameLink" href="/game" hidden="">Game is running now. Watch it here</a>
-		</p>
-	</div>
-	<div style="float: left;padding-left: 3vh;font-size: 2vh;">
-		<p>
-			<input onclick="updateTable();" value="Update table" type="submit">
-		</p>
-		<p>
-			<text id="botMsg">Currently uploaded bots: 0</text>
-		</p>
-		<table id="botsTable" border-color="black" width="200" border="2"></table>
-		<p>
-			<b>
-				RULES:
-				<br> 1. Name of your file and friendly name must be unique
-				<br> 2. Name of your file must be equal to yorr bot class name or it will result in compilation error
-				<br> 3. If you want to be redirected to game page you must allow popup windows in your browser
-				<br> 4. All free space will be filled with developers' bots
-			</b>
-		</p>
-	</div>
+    <div>
+        <span style="font-family: Consolas;font-size: 40pt;	color: darkgreen;font-weight: bold;font-style: italic;">AntiYoyBots</span>
+    </div>
+    <div>
+        <div style="background: lightgreen;float: left;padding: 2vh;margin-right: 1vh;">
+            <p>
+                <h3>You can upload your .cpp files here</h3>
+                <label style="background: darkgreen;font-style: italic;color: white;padding: 1vh;margin-right: 1vh;">
+                    <input id="source" type="file" style="width: 0;">Upload File</label>
+                Currently selected file:
+                <span id="sourceName" style="font-weight: bold;">null</span>
+            </p>
+            <p style="margin-top: 4vh;">
+                <input type="button" id="sendButton" value="Send">
+                <input type="button" id="cleanButton" value="Clean selected">
+                <input type="button" id="startButton" value="Start with selected">
+            </p>
+            <p>
+                <big>Select map type:</big>
+                <br>
+                <label>
+                    <input type="radio" id="duel" name="map">Duel map</label>
+                <label>
+                    <input type="radio" id="classic" name="map">Classic map</label>
+                <label>
+                    <input type="radio" id="random" name="map" checked="">Random map</label>
+            </p>
+            <p>
+                <big>Select number of bots:</big>
+                <br>
+                <select id="count">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6" selected="">6</option>
+                </select>
+            </p>
 
-	<script type="text/javascript" src="/scripts/jquery.min.js"></script>
-	<script type="text/javascript" src="/scripts/main_page.js"></script>
-
+        </div>
+        <div style="float: left;padding: 2vh">
+            <span id="gameMsg" hidden="">Game is preparing. You will be redirected when it is ready.</span>
+            <a href="/game" id="gameLink" hidden="">You can see game process here</a>
+            <h3>Currently uploaded bots:</h3>
+            <table id="table" width="200" border="2">
+                <tr>
+                    <td>Name</td>
+                    <td></td>
+                </tr>
+            </table>
+            <input type="button" id="updateButton" style="margin-top: 1vh" value="Update">
+        </div>
+        <div style="padding-top: 3vh;clear: both">
+            RULES
+            <br> 1. File names must be unique or you will get an error while sending your file
+            <br> 2. Each filename must be equal to bot classname or it may result in compilation error
+            <br> 3. Number of bots may be less than number of selected files. In this case all free space will be filled with
+            developers' bots
+            <br> 4. In order to be redirected to game page you must allow popup windows in your browser
+            <br> 5. On "Duel" map number of bots is fixed to 2 and on "Classic" map it is fixed to 4
+        </div>
+    </div>
 </body>
+<script type="text/javascript" src="/scripts/main_page.js"></script>
 
 </html>

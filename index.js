@@ -23,8 +23,6 @@ const exec = require("child_process");
 
 const u = require("./util.js");
 const c = require("./constants.js");
-const botsSub = require("./bots-router.js");
-const gameSub = require("./game-router.js");
 
 ////////////////////////////////////////////////////////////////////////////////
 //  GLOBAL VARIABLES & CONSTANTS
@@ -33,6 +31,7 @@ const gameSub = require("./game-router.js");
 const app = express();
 
 var fullData = {
+	bots: [],
 	running: false,
 	stat: {},
 	turn: 0,
@@ -82,12 +81,12 @@ app.listen(c.HTTP_PORT, () => {
 ////////////////////////////////////////////////////////////////////////////////
 
 function getMain(req, res, next) {
-	u.sendFile(res, next, c.FILES.main);
+	u.sendFile(res, next, "main");
 	u.log("sent main page");
 }
 
 function getGame(req, res, next) {
-	u.sendFile(res, next, c.FILES.game);
+	u.sendFile(res, next, "game");
 	u.log("sent game page");
 }
 
@@ -99,13 +98,14 @@ function notFound(req, res, next) {
 //	HANDLER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+// TODO: send data if running or bots changed
 function getBots(req, res, next) {
 	if (deniedWithoutXHR(req, res)) return;
 	let tmpBots = fs.readdirSync(c.DIRS.botSrc);
 	for (let i in tmpBots) {
 		tmpBots[i] = u.cutPath(tmpBots[i]);
 	}
-	res.status(200).json(tmpBots);
+	res.status(200).json({ running: fullData.running, bots: tmpBots });
 }
 
 function postBots(req, res, next) {
@@ -124,12 +124,8 @@ function postBots(req, res, next) {
 
 function getGameData(req, res, next) {
 	if (deniedWithoutXHR(req, res)) return;
-	let tmpBots = fs.readdirSync(c.DIRS.botSrc);
-	for (let i in tmpBots) {
-		tmpBots[i] = u.cutExt(u.cutPath(tmpBots[i]));
-	}
 	let resData = {
-		bots: tmpBots,
+		bots: fullData.bots,
 		stat: fullData.stat,
 		turn: fullData.turn,
 		running: fullData.running,
@@ -193,6 +189,7 @@ function cleanBotSource(req, res) {
 function startGame(req, res) {
 	let count = +req.body.count;
 	let bots = req.body.bots.split(" ");
+	fullData.bots = bots;
 	let map = req.body.map;
 	setDynamicHeader(count, bots, map);
 	let code = buildGame(bots);
@@ -212,11 +209,12 @@ function setDynamicHeader(count, bots, map) {
 	let headerPath = __dirname + "/arch/dynamic.h";
 	let header = "#define BOTS_COUNT " + count + "\n";
 	let i = 0;
-	for (; i < mas.length && i < 6; i++) {
+	for (; i < bots.length && i < 6; i++) {
 		header += "#define BOT_" + i + " " + u.cutPathExt(bots[i]) + "\n";
 	}
-	for (; i <= mas[0]; i++) {
+	for (; i <= count; i++) {
 		header += "#define BOT_" + i + " " + "game_module::Bot \n";
+		fullData.bots.push("-= D3V310P3R =-");
 	}
 	header += "define MAP_TYPE \"" + map + "\"";
 	fs.writeFileSync(headerPath, header);
