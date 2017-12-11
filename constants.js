@@ -14,5 +14,5 @@ constants.FILES = {
 }
 constants.DIRS = {
 	scripts: "scripts",
-	botSrc: "uploaded_sources"
+	botSrc: "bot_sources"
 }

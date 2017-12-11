@@ -68,12 +68,12 @@ app.use(notFound);
 
 // listen on environment or 5000 port
 app.listen(c.PORT, () => {
-	u.log("Server listening on port " + c.PORT + "!");
+	u.log("INFO: Server listening on port " + c.PORT + "!");
 });
 
 // listen on standard http port
 app.listen(c.HTTP_PORT, () => {
-	u.log("Server listening on port " + c.HTTP_PORT + "!");
+	u.log("INFO: Server listening on port " + c.HTTP_PORT + "!");
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,12 +82,10 @@ app.listen(c.HTTP_PORT, () => {
 
 function getMain(req, res, next) {
 	u.sendFile(res, next, "main");
-	u.log("sent main page");
 }
 
 function getGame(req, res, next) {
 	u.sendFile(res, next, "game");
-	u.log("sent game page");
 }
 
 function notFound(req, res, next) {
@@ -106,16 +104,20 @@ function getBots(req, res, next) {
 		tmpBots[i] = u.cutPath(tmpBots[i]);
 	}
 	res.status(200).json({ running: fullData.running, bots: tmpBots });
+	u.log("INFO: Successfully sent list of uploaded bots")
 }
 
 function postBots(req, res, next) {
 	if (deniedWithoutXHR(req, res)) return;
 	let command = req.body.command;
 	if (command == "add") {
+		u.log("INFO: Received \"ADD\" command.");
 		addBotSource(req, res);
 	} else if (command == "clean") {
+		u.log("INFO: Received \"CLEAN\" command.");
 		cleanBotSource(req, res);
 	} else if (command == "start") {
+		u.log("INFO: Received \"START\" command.");
 		startGame(req, res);
 	} else {
 		res.sendStatus(400);
@@ -151,11 +153,13 @@ function postGameData(req, res, next) {
 //	OTHER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-function deniedWitoutXHR(req, res) {
+function deniedWithoutXHR(req, res) {
 	if (!req.xhr) {
 		res.sendStatus(403);
+		u.log("ERROR: Received non-XHR request");
 		return true;
-	} else return false;
+	}
+	return false;
 }
 
 function addBotSource(req, res, next) {
@@ -163,14 +167,14 @@ function addBotSource(req, res, next) {
 	let path = req.files.source.path;
 	let fName = c.DIRS.botSrc + "/" + name;
 	if (fs.existsSync(fname)) {
-		res.status(400).send("ERROR: file " + name + " already exists");
 		fs.unlinkSync(path);
-		u.log("ERROR: file " + name + " already exists");
+		res.status(400).send("ERROR: File " + name + " already exists.");
+		u.log("ERROR: Cannot receive " + name + ". File already exists.");
 		return;
 	}
 	fs.renameSync(path, fName);
-	u.log("Received bot source successfully");
 	res.sendStatus(200);
+	u.log("INFO: Received bot " + name + " successfully!");
 }
 
 function cleanBotSource(req, res) {
@@ -184,6 +188,7 @@ function cleanBotSource(req, res) {
 		fs.unlinkSync(c.DIRS.botSrc + "/" + bots[i]);
 	}
 	res.sendStatus(200);
+	u.log("INFO: Cleaned bots ", ...bots, " successfully!");
 }
 
 function startGame(req, res) {
@@ -195,11 +200,14 @@ function startGame(req, res) {
 	let code = buildGame(bots);
 	if (code == 1) {
 		res.status(500).send("ERROR: Compilation failed. Check your source files.");
+		u.log("ERROR: Compilation failed. Check your source files.");
 	} else if (code == 127 || code === null) {
-		res.status(500).send("ERROR: CMake not found. Check CMake installation.");
+		res.status(500).send("ERROR: Compilation failed. CMake not found. Check CMake installation.");
+		u.log("ERROR: Compilation failed. CMake not found. Check CMake installation.");
 	}
 	execGame();
 	res.sendStatus(200);
+	u.log("INFO: Executed game.")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,21 +226,26 @@ function setDynamicHeader(count, bots, map) {
 	}
 	header += "define MAP_TYPE \"" + map + "\"";
 	fs.writeFileSync(headerPath, header);
+	u.log("INFO: Header file created!");
 }
 
 function buildGame() {
+	u.log("INFO: Build process started!");
 	process.env.BOT_SOURCES = bots.join(" " + c.DIRS.botSrc + "/");
 	let result = exec.spawnSync("cmake -H. -B_build " +
 		"-DCMAKE_INSTALL_PREFIX=_install -DCMAKE_BUILD_TYPE=Release && " +
 		"cmake --build _build --clean-first", { env: process.env });
-	return result.status;
+	u.log("INFO: Build process finished.")
+		return result.status;
 }
 
 function execGame() {
 	exec.spawn("./_install/bin/game")
 		.on("close", (code, signal) => {
 			fullData.running = false;
+			u.log("INFO: Game process closed.");
 		});
+	u.log("INFO: Game process started!");
 	fullData.running = true;
 }
 

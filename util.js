@@ -55,10 +55,10 @@ function sendFileX(res, next, path, type) {
 		headers: { "Content-Type": type }
 	}, (err) => {
 		if (err) {
-			util.log("error sending " + path);
+			util.log("ERROR: Failed to send " + path);
 			next(err);
 		} else {
-			util.log("successfully sent " + path);
+			util.log("INFO: Successfully sent " + path);
 		}
 	});
 };
