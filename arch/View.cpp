@@ -1,5 +1,5 @@
 #include "View.h"
-/*#include "curl/curl.h"
+#include "curl/curl.h"
 #include "nlohmann/json.hpp"
 #include <vector>
 
@@ -116,4 +116,4 @@ void View::show(const Map & newState){
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
-}*/
+}
