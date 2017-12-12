@@ -8,7 +8,6 @@
 
 namespace game_module
 {
-
 	class Controller;
 	/*!
 	\brief Класс моделирует игрока.

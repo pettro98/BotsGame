@@ -53,7 +53,7 @@ namespace game_module
 
 	bool Hex::operator == (const Hex & hex) const
 	{
-		return (Coordinates == hex.coordinates());
+		return Coordinates == hex.coordinates();
 	}
 
 	void Hex::set_color(hex_color new_color)

@@ -20,26 +20,12 @@ namespace game_module
 
 	bool Pair::operator < (const Pair & pair) const
 	{
-		if (First < pair.First)
-		{
-			return true;
-		}
-		else if (First == pair.First)
-		{
-			return Second < pair.Second;
-		}
-		return false;
+		return (First < pair.First) || (First == pair.First && Second < pair.Second);
 	}
 
 	bool operator != (const Pair & pair1, const Pair & pair2)
 	{
 		return !(pair1 == pair2);
-	}
-
-	std::ostream & operator << (std::ostream & out, const Pair & pair)
-	{
-		out << "(" << pair.First << ", " << pair.Second << ")";
-		return out;
 	}
 
 	bool is_type(unit_type type)

@@ -66,14 +66,6 @@ namespace game_module
 	*/
 	bool operator != (const Pair & pair1, const Pair & pair2);
 	/*!
-	\brief Оператор вывода пары в поток.
-	- Пара выводится в виде (First, Second).
-
-	\param out Поток вывода.
-	\param pair Пара, которую необходимо вывести.
-	*/
-	std::ostream & operator << (std::ostream & out, const Pair & pair);
-	/*!
 	\brief Перечисление хранит типы юнитов, которые могут храниться в гексе.
 	*/
 	enum unit_type

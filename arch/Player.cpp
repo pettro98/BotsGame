@@ -32,7 +32,7 @@ namespace game_module
 
 	bool Player::operator == (const Player & player) const
 	{
-		return (Color == player.color());
+		return Color == player.color();
 	}
 
 	hex_color Player::color(const Pair & hex) const

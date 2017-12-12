@@ -5,7 +5,7 @@
 #include "Player.h"
 #include "Hex.h"
 #include "Unit.h"
-
+#include "View.h"
 
 namespace game_module
 {
@@ -50,6 +50,10 @@ namespace game_module
 		- Необходим для реализации игрового API.
 		*/
 		Controller * GameController;
+		/*!
+		\brief Указатель на объект класса осуществляющий связь с сервером.
+		*/
+		View * GameView;
 	public:
 		/*!
 		\brief Деструктор.
@@ -79,7 +83,7 @@ namespace game_module
 		\param players_number Желаемое кол-во игроков.
 		*/
 		Game(size_type max_turns, size_type dimension_x, size_type dimension_y,
-			std::string map_type, size_type players_number = 6);
+			std::string map_type, size_t players_number = 6);
 		/*!
 		\brief Метод сообщает не закончилась ли игра.
 		- Если текущий игровой ход больше максимально возможного кол-ва игровых ходов в игре
@@ -255,9 +259,5 @@ namespace game_module
 		Значение по умолчанию false.
 		*/
 		void start_game(bool show_map = false);
-		/*!
-		\brief Метод выводит результаты игры в консоль.
-		*/
-		void show_results();
 	};
 }

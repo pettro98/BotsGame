@@ -36,7 +36,7 @@ namespace game_module
 			}
 			case game_module::unit_type::army:
 			{
-				if (strength >= 1 && strength <= 4)
+				if (strength > 0 && strength < 5)
 				{
 					result = new Army(nullptr, strength);
 				}
@@ -44,7 +44,7 @@ namespace game_module
 			}
 			case game_module::unit_type::tower:
 			{
-				if (strength >= 2 && strength <= 3)
+				if (strength > 1 && strength < 4)
 				{
 					result = new Tower(nullptr, strength);
 				}
@@ -226,7 +226,7 @@ namespace game_module
 				DistrictIncome -= 1;
 				if (is_static(hex->get_unit_type()))
 				{
-					DistrictIncome += Tree::income();
+					DistrictIncome -= Tree::income();
 				}
 				else if (is_player_unit(hex->get_unit_type()))
 				{
@@ -234,10 +234,13 @@ namespace game_module
 					{
 						DistrictIncome -= Farm::income();
 					}
-					else if (is_army(hex->get_unit_type()) 
-						|| is_tower(hex->get_unit_type()))
+					else if (is_army(hex->get_unit_type()))
 					{
-						DistrictIncome += hex->get_unit()->cost();
+						DistrictIncome -= Army::income(hex->get_unit()->strength());
+					}
+					else if (is_tower(hex->get_unit_type()))
+					{
+						DistrictIncome -= Tower::income(hex->get_unit()->strength());
 					}
 				}
 			}

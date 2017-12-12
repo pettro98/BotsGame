@@ -2,7 +2,6 @@
 #include "Bot.h"
 #include <algorithm> 
 #include <string>
-#include <windows.h>
 #include <map>
 
 namespace game_module
@@ -16,10 +15,11 @@ namespace game_module
 		}
 		delete GameMap;
 		delete GameController;
+		delete GameView;
 	}
 
 	Game::Game(size_type max_turns, size_type dimension_x, size_type dimension_y
-		, std::string map_type, size_type players_number)
+		, std::string map_type, size_t players_number)
 		: CurrentPlayer(game_module::hex_color::blank)
 		, CurrentTurn(0)
 		, MaxTurns(max_turns)
@@ -58,6 +58,7 @@ namespace game_module
 			}
 			while (Players.size() > players_number)
 			{
+				delete Players.back();
 				Players.pop_back();
 			}
 			while (Players.size() < players_number)
@@ -71,28 +72,13 @@ namespace game_module
 			throw("incorect_map_type");
 		}
 		GameController = new Controller(this);
-		this->place_players();
+		GameView = new View();
+		place_players();
 	}
 
 	bool Game::check_end_game() const
 	{
-		if (CurrentTurn > MaxTurns)
-		{
-			return true;
-		}
-		size_type players_in_game = 0;
-		for (auto & i : Players)
-		{
-			if (i->get_capitals_number())
-			{
-				++players_in_game;
-			}
-		}
-		if (players_in_game > 1)
-		{
-			return false;
-		}
-		return true;
+		return CurrentTurn > MaxTurns || GameController->get_players_number() < 2;
 	}
 
 	Hex * Game::operator () (const Pair & hex)
@@ -238,7 +224,7 @@ namespace game_module
 				}
 			}
 		}
-		for (size_type i = 0; i < capitals.size(); ++i)
+		for (size_t i = 0; i < capitals.size(); ++i)
 		{
 			Players[i]->add_capital(capitals[i]);
 			(*this)(capitals[i])->set_color(Players[i]->color());
@@ -385,26 +371,22 @@ namespace game_module
 
 	void Game::start_game(bool show_map)
 	{
-		HANDLE hSTDOut = GetStdHandle(STD_OUTPUT_HANDLE);
 		if (show_map)
 		{
-			print_map(this->get_game_map());
+			GameView->show(*GameMap, Results);
 		}
 		while (this->current_turn() <= this->max_turns())
 		{
-			for (size_type i = 0; i < this->get_players().size(); ++i)
+			for (size_t i = 0; i < this->get_players().size(); ++i)
 			{
 				this->set_current_player(this->get_players()[i]->color());
 				this->prepare_player();
 				if (this->player_in_game(this->get_current_player()))
 				{
 					this->get_players()[i]->turn();
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << this->current_turn() << " "
-						<< this->get_player(this->get_current_player())->name() << std::endl;
 				}
 			}
-			for (size_type i = 0; i < this->get_players().size(); ++i)
+			for (size_t i = 0; i < this->get_players().size(); ++i)
 			{
 				if (!this->player_in_game(this->get_players()[i]->color())
 					&& this->results().last_turn[this->get_players()[i]->color() - 1] == 0)
@@ -418,36 +400,14 @@ namespace game_module
 			}
 			if (show_map)
 			{
-				print_map(this->get_game_map());
+				GameView->show(*GameMap, Results);
 			}
 			this->double_trees();
 			this->turn_passed();
 		}
 		if (show_map)
 		{
-			print_map(this->get_game_map());
+			GameView->show(*GameMap, Results);
 		}
-	}
-
-	void Game::show_results()
-	{
-		for (size_type i = 0; i < this->get_players().size(); ++i)
-		{
-			if (this->results().last_turn[this->get_players()[i]->color() - 1] == 0)
-			{
-				this->set_last_turn(this->get_players()[i]->color(), this->current_turn());
-			}
-		}
-		for (size_type i = 0; i < this->get_players().size(); ++i)
-		{
-			std::cout << "color = " << this->get_players()[i]->name()
-				<< ", last turn = " << this->results().last_turn[i]
-				<< ", built farms = " << this->results().built_farms[i]
-				<< ", built towers = " << this->results().built_towers[i]
-				<< ", built armies = " << this->results().built_armies[i]
-				<< ", moves = " << this->results().moves[i]
-				<< std::endl;
-		}
-		std::cout << "winner is : " << this->get_player(this->get_winner())->name() << std::endl;
 	}
 }

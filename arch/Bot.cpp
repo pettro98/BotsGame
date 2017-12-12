@@ -51,7 +51,7 @@ namespace game_module
 			auto district_hexs = get_internal_border(i, is_none);
 			std::random_shuffle(district_hexs.begin(), district_hexs.end());
 			auto rule = custom_tower_sort(district_hexs);
-			for (size_type j = 0; j < rule.size(); ++j)
+			for (size_t j = 0; j < rule.size(); ++j)
 			{
 				if (get_district_income(i) < 3 || get_district_money(i) < get_tower_cost(2)
 					|| money_limit > get_district_money(i))

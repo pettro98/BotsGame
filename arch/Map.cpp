@@ -1,6 +1,5 @@
 #pragma once
 #include "Map.h"
-#include <windows.h>
 #include <functional>
 #include <algorithm> 
 
@@ -488,7 +487,7 @@ namespace game_module
 		MapImpress map_impress(*this);
 		hex_color basic_color = color(hex);
 		result.push_back(hex);
-		map_impress(hex).Color = game_module::hex_color::extra;
+		map_impress(hex)->Color = game_module::hex_color::extra;
 		size_type radius = 1;
 		bool incomplete(true);
 		bool find;
@@ -500,7 +499,7 @@ namespace game_module
 				[basic_color](hex_color color) { return color == basic_color; }));
 			for (auto & i : row)
 			{
-				if (is_extra(map_impress(i).Color))
+				if (is_extra(map_impress(i)->Color))
 				{
 					find = true;
 					continue;
@@ -508,9 +507,9 @@ namespace game_module
 				for (auto & j : get_neighbours(i,
 					[basic_color](hex_color color) { return color == basic_color; }))
 				{
-					if (is_extra(map_impress(j).Color))
+					if (is_extra(map_impress(j)->Color))
 					{
-						map_impress(i).Color = game_module::hex_color::extra;
+						map_impress(i)->Color = game_module::hex_color::extra;
 						result.push_back(i);
 						incomplete = true;
 						break;
@@ -519,7 +518,7 @@ namespace game_module
 			}
 			for (auto i = row.rbegin(); i != row.rend(); ++i)
 			{
-				if (is_extra(map_impress(*i).Color))
+				if (is_extra(map_impress(*i)->Color))
 				{
 					find = true;
 					continue;
@@ -527,9 +526,9 @@ namespace game_module
 				for (auto & j : get_neighbours(*i,
 					[basic_color](hex_color color) { return color == basic_color; }))
 				{
-					if (is_extra(map_impress(j).Color))
+					if (is_extra(map_impress(j)->Color))
 					{
-						map_impress(*i).Color = game_module::hex_color::extra;
+						map_impress(*i)->Color = game_module::hex_color::extra;
 						result.push_back(*i);
 						incomplete = true;
 						break;
@@ -714,176 +713,6 @@ namespace game_module
 			&& compare1(color(hex)) && compare2(type(hex)));
 	}
 
-	void print_map(const Map & map)
-	{
-		HANDLE hSTDOut = GetStdHandle(STD_OUTPUT_HANDLE);
-		int colors[8] = {0x0007, 0x0004, 0x0002, 0x0003, 0x0005, 0x0001, 0x0006, 0x0000 };
-		char type[8] = {'0', '1', 't', 'C', 'f', '?', '?', 'G'};
-		for (size_type i = 0; i < map.dimension_y(); ++i)
-		{		
-			for (size_type j = 0; j < map.dimension_x(); ++j)
-			{
-				if (j % 2)
-				{
-					continue;
-				}
-				if (map(j, i)->color() == black)
-				{
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << "/";
-					SetConsoleTextAttribute(hSTDOut, 0x0000 | FOREGROUND_INTENSITY);
-					std::cout << "*";
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << char(0x5c);
-				}
-				else
-				{
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << "/";
-					SetConsoleTextAttribute(hSTDOut, colors[map(j, i)->color()] | FOREGROUND_INTENSITY);
-					if (is_army(map(j, i)->get_unit_type()))
-					{
-						std::cout << map(j, i)->get_unit()->strength();
-					}
-					else if (is_tower(map(j, i)->get_unit_type()))
-					{
-						if (map(j, i)->get_unit()->strength() == 2)
-						{
-							std::cout << 't';
-						}
-						else
-						{
-							std::cout << 'T';
-						}
-					}
-					else
-					{
-						std::cout << type[map(j, i)->get_unit_type()];
-					}
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << char(0x5c);
-				}
-				if (j + 1 < map.dimension_x() && i - 1 >= 0)
-				{
-					if (map(j + 1, i - 1)->color() == black)
-					{
-						SetConsoleTextAttribute(hSTDOut, 0x0000 | FOREGROUND_INTENSITY);
-						std::cout << "*";
-					}
-					else
-					{
-						SetConsoleTextAttribute(hSTDOut, colors[map(j + 1, i - 1)->color()] | FOREGROUND_INTENSITY);
-						if (is_army(map(j + 1, i - 1)->get_unit_type()))
-						{
-							std::cout << map(j + 1, i - 1)->get_unit()->strength();
-
-						}
-						else if (is_tower(map(j + 1, i - 1)->get_unit_type()))
-						{
-							if (map(j + 1, i - 1)->get_unit()->strength() == 2)
-							{
-								std::cout << 't';
-							}
-							else
-							{
-								std::cout << 'T';
-							}
-						}
-						else
-						{
-							std::cout << type[map(j + 1, i - 1)->get_unit_type()];
-						}
-					}
-				}
-				else
-				{
-					std::cout << " ";
-				}
-			}
-			std::cout << std::endl;
-			for (size_type j = 0; j < map.dimension_x(); ++j)
-			{
-				if (j % 2)
-				{
-					continue;
-				}
-				if (map(j, i)->color() == black)
-				{
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << char(0x5c);
-					SetConsoleTextAttribute(hSTDOut, 0x0000 | FOREGROUND_INTENSITY);
-					std::cout << "*";
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << "/";
-				}
-				else
-				{
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << char(0x5c);
-					SetConsoleTextAttribute(hSTDOut, colors[map(j, i)->color()] | FOREGROUND_INTENSITY);
-					if (is_army(map(j, i)->get_unit_type()))
-					{
-						std::cout << map(j, i)->get_unit()->strength();
-					}
-					else if (is_tower(map(j, i)->get_unit_type()))
-					{
-						if (map(j, i)->get_unit()->strength() == 2)
-						{
-							std::cout << 't';
-						}
-						else
-						{
-							std::cout << 'T';
-						}
-					}
-					else
-					{
-						std::cout << type[map(j, i)->get_unit_type()];
-					}
-					SetConsoleTextAttribute(hSTDOut, 0x0007 | FOREGROUND_INTENSITY);
-					std::cout << "/";
-				}
-				if (j + 1 < map.dimension_x())
-				{
-					if (map(j + 1, i)->color() == black)
-					{
-						SetConsoleTextAttribute(hSTDOut, 0x0000 | FOREGROUND_INTENSITY);
-						std::cout << "*";
-					}
-					else
-					{
-						SetConsoleTextAttribute(hSTDOut, colors[map(j + 1, i)->color()] | FOREGROUND_INTENSITY);
-						if (is_army(map(j + 1, i)->get_unit_type()))
-						{
-							std::cout << map(j + 1, i)->get_unit()->strength();
-
-						}
-						else if (is_tower(map(j + 1, i)->get_unit_type()))
-						{
-							if (map(j + 1, i)->get_unit()->strength() == 2)
-							{
-								std::cout << 't';
-							}
-							else
-							{
-								std::cout << 'T';
-							}
-						}
-						else
-						{
-							std::cout << type[map(j + 1, i)->get_unit_type()];
-						}
-					}
-				}
-				else
-				{
-					std::cout << " ";
-				}
-			}
-			std::cout << std::endl;		
-		}	
-	}
-
 	HexImpress::HexImpress(const Hex & hex)
 		: Coordinates(hex.coordinates())
 		, Color(hex.color())
@@ -920,16 +749,13 @@ namespace game_module
 		Root = root;
 	}
 
-	HexImpress & MapImpress::operator () (const Pair & hex)
+	HexImpress * MapImpress::operator () (const Pair & hex)
 	{
 		if (hex.First > 0 && hex.Second > 0 && hex.First < DimensionX - 1
 			&& hex.Second < DimensionY - 1)
 		{
-			return *Root[hex.First][hex.Second];
+			return Root[hex.First][hex.Second];
 		}
-		Hex buf(0, 0);
-		buf.set_color(game_module::hex_color::black);
-		HexImpress result(buf);
-		return result;
+		return nullptr;
 	}
 }
