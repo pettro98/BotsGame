@@ -12,121 +12,81 @@
     <div id="movie">
         <script type="text/javascript">
             var myStage = bonsai.run(document.getElementById('movie'), {
+                width: 500,
+                height: 400,
                 code: function () {
+                    const INIT_X = 100;
+                    const INIT_y = 100;
 
-                    var hexHeight = Math.sqrt(3) * 30;
-                    var hexWidth = 60;
-                    var hexHoriz = hexHeight * 3 / 4;
+                    const HEX_R = 30;
+                    const HEX_W = Math.sqrt(3) * HEX_R;
+                    const HEX_H = 2 * HEX_R;
 
+                    const HEX_VS = HEX_H / 2;
+                    const HEX_HS = HEX_W / 2;
+
+                    const FONT_S = HEX_R * 1.5;
+
+                    const colors = ["grey", "white",
+                        "lightpink", "lightgreen",
+                        "cyan", "magenta",
+                        "lightblue", "gold"];
+
+                    var oldGroup = new Group().addTO(stage);
+                    var newGroup = new Group();
                     var gameData = {};
-                    var groupNew = new Group();
-                    var groupOld = new Group().addTo(stage);
-                    var colors = ["grey", "white", "lightpink", "lightgreen", "cyan", "magenta", "lightblue", "gold"];
 
-                    function getHex(x, y, color) {
-                        return new Polygon(x, y, 30, 6).attr({ rotation: Math.Pi / 6 }).fill(color).strokeColor("black").strokeWidth(2).addTo(groupNew);
-                    }
-
-                    function getChar(posx, posy, char) {
-                        let tmp = new Text(char).attr({
+                    function setChar(posx, posy, char, target) {
+                        new Text(char).attr({
                             fontFamily: 'Arial, sans-serif',
-                            fontSize: '40',
-                            x: posx,
-                            y: posy
-                        });
-                        tmp.setOrigin(tmp.getBoundingBox.width / 2, tmp.getBoundingBox.height / 2);
-                        return tmp.addTo(groupNew);
+                            fontSize: fontS,
+                            x: posx - fontS / 3.6,
+                            y: posy - fontS / 1.7,
+                        }).addTo(target);
                     }
 
-                    function drawRow(x, y, data) {
-                        for (let i in data) {
-                            let xpos = x + hexHoriz * i;
-                            let ypos = (i % 2 == 0) ? y : y + hexHeight / 2;
-                            getHex(xpos, ypos, colors[data[i].owner]);
-                            getChar(xpos - 8, ypos - 8, data[i].contents);
+                    function setHex(i, j, color, cont, target) {
+                        let x = INIT_X + HEX_HS * i + HEX_HS * (i % 2);
+                        let y = INIT_Y + HEX_VS * j;
+                        new Polygon(x, y, HEX_R, 6).attr({
+                            strokeColor: "black",
+                            strokeWidth: 2
+                        }).fill(color).addTo(target);
+                        setChar(x, y, cont, target);
+                    }
+
+                    function drawField(data, target) {
+                        for (let j in data) {
+                            let row = data[j];
+                            for (let i in row) {
+                                setHex(i, j,
+                                    colors[row[i].owner],
+                                    row[i].contents, target);
+                            }
                         }
                     }
 
                     function updateField(data) {
-                        for (let i in data) {
-                            let x = 50;
-                            let y = hexHeight * i;
-                            drawRow(x, y, data[i]);
-                        }
-                        groupNew.addTo(stage);
-                        groupOld.destroy();
-                        groupOld = groupNew;
-                        groupNew = new Group();
+                        drawField(data, newGroup);
+                        oldGroup.destroy();
+                        oldGroup = newGroup;
+                        newGroup = new Group();
                     }
 
-                    stage.on('message:gameData', function (data) {
+                    stage.on("message:gameData", function (data) {
                         gameData = data;
                         updateField(data);
                     });
-                },
-                width: 500,
-                height: 500
-            });
-
-            var gameInProgress = true;
-            var botFiles = [];
-            var stat = {};
-
-            function getData() {
-                if (!gameInProgress) {
-                    return;
                 }
-                let xhr = new XMLHttpRequest();
-                xhr.open("GET", "/game", true);
-                xhr.timeout = 10000;
-
-                xhr.onload = function () {
-                    let data = JSON.parse(xhr.responseText);
-                    myStage.sendMessage("gameData", data.gameData);
-                    stat = data.stat;
-                    gameInProgress = data.gameInProgress;
-                    botFiles = data.bots;
-                };
-
-                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                xhr.send();
-            }
-
-            getData();
-            setInterval(function(){getData(); fillTable()}, 1000);
-
+            });
         </script>
     </div>
     <div>
         <table id="statTable"></table>
+        <input id="back" type="button" value="<<" disabled="" onclick="if(turnNum != 0){getData(--turn);}">
+        <input id="back" type="button" value=">>" disabled="" onclick="if(turnNum != stat.turn){getData(++turn);}">
     </div>
-    <script type="text/javascript">
-        var statTable = document.getElementById("statTable");
-        var statRowCount = 0;
-
-        function addTableRow() {
-            statRowCount += 1;
-            let row = document.createElement("tr");
-            row.setAttribute("style", "background:" + colors[statRowCount] + ";");
-            let mas = [row];
-            for (let i in arguments) {
-                row.innerHTML += "<td>" + arguments[i] + "</td>";
-                mas.push(arguments[i]);
-            };
-            statTable.appendChild(row);
-        }
-
-        function clearTable() {
-            statTable.innerHTML = "";
-        }
-
-        function fillTable() {
-            clearTable();
-            addTableRow("Name", "points", "last turn", "armies", "farms", "towers", "moves");
-            for(let i in botFiles){
-                addTableRow(botFiles[i], stat.points[i], stat.last_turn[i], stat.built_armies[i], stat.built_farms[i], stat.built_towers[i], stat.moves[i]);
-            }
-        }
+    <script type="text/javascript" src="/scripts/game_page.js">
     </script>
 </body>
 
