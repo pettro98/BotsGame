@@ -50,3 +50,5 @@
 *.vs*
 *_build*
 *_install*
+*cmake-build*
+*.idea*
