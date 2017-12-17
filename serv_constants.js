@@ -3,8 +3,8 @@
 var constants = module.exports;
 
 constants.GAME_EXEC = __dirname + "/_install/bin/game";
-constants.PORT = process.env.PORT || 5000;
-constants.HTTP_PORT = 80;
+constants.PORT = process.env.PORT || 80;
+// constants.HTTP_PORT = 80;
 constants.PATH_DELIM = "/";
 constants.FILES = {
 	main: { path: "html/main.html", type: "text/html" },
