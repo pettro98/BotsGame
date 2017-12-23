@@ -37,7 +37,6 @@ var data = {
     state: "idle",
     lastTurn: 0,
     playingBots: [],
-    botSources: [],
     currentStats: {},
     fieldHistory: []
 };
@@ -96,19 +95,22 @@ app.listen(c.PORT, () => {
 ////////////////////////////////////////////////////////////////////////////////
 
 function getMain(req, res, next) {
-    u.sendFile(res, next, "main");
+    u.sendFILE(res, next, "main");
 }
 
 function getGame(req, res, next) {
-    u.sendFile(res, next, "game");
+    u.sendFILE(res, next, "game");
 }
 
 function getCMakeLog(req, res, next) {
-    if(fs.existsSync("./CMakeLog.txt")){
-        u.sendFileX(res, next, "./CMakeLog.txt", "text/plain");
-    } else { 
-        res.sendStatus(403);
-    }
+    let log = c.FILES.cmake_log.path;
+    fs.exists(log, (exists) => {
+        if (exists) {
+            res.download(log);
+        } else {
+            res.status(200).send("No cmake log found!");
+        }
+    });
 }
 
 function notFound(req, res, next) {
@@ -165,7 +167,7 @@ function postBots(req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-//  /game/data HANGLER FUNCTIONS
+//  /game/data HANDLER FUNCTIONS
 
 function getGameData(req, res, next) {
     if (deniedWithoutXHR(req, res)) return;
@@ -178,6 +180,7 @@ function postGameData(req, res, next) {
     data.currentStats = body.stats;
     data.lastTurn = body.lastTurn;
     data.fieldHistory.push(body.field);
+    res.sendStatus(200);
     sendGameData();
 }
 
@@ -194,15 +197,24 @@ function postGameData(req, res, next) {
 
 function registerBotsRequest(req, res) {
     let body = JSON.parse(req.body);
-    let bots = getBotsList();
-    if (body.length != bots.length) {
-        res.status(200).json(bots);
+    let tmp = getBotsList();
+    if (body.state != data.state) {
+        res.status(200).json({
+            state: data.state
+        });
+        u.log("INFO: Immediately sent game state");
+        return
+    }
+    if (body.bots.length != tmp.length) {
+        res.status(200).json({
+            bots: tmp
+        });
         u.log("INFO: Immediately sent bots list (different count)");
         return;
     }
-    for (let i in body) {
-        if (bots.indexOf(body[i]) == -1) {
-            res.status(200).json(bots);
+    for (let i in body.bots) {
+        if (tmp.indexOf(body.bots[i]) == -1) {
+            res.status(200).json(tmp);
             u.log("INFO: Immediately sent bots list (different content)");
             return;
         }
@@ -222,7 +234,7 @@ function registerGameRequest(req, res) {
     if (body.state != data.state) {
         res.status(200).json({
             state: data.state,
-            stats = data.stats
+            stat: data.stats
         });
         u.log("INFO: Immediately sent state");
         return;
@@ -303,7 +315,7 @@ function sendState() {
     u.log("INFO: Sent updated game state");
 }
 
-function sendBots(){
+function sendBots() {
     let resp = polls.bots.res;
     let tmp = {
         state: data.state,
@@ -341,16 +353,28 @@ function addBots(req, res) {
     let name = req.files.source.name;
     let path = req.files.source.path;
     let fName = c.DIRS.botSrc + "/" + name;
-    if (fs.existsSync(fName)) {
-        fs.unlinkSync(path);
-        res.status(400).send("ERROR: File " + name + " already exists.");
-        u.log("ERROR: Cannot receive " + name + ". File already exists.");
-        return;
-    }
-    fs.renameSync(path, fName);
-    u.log("INFO: Received bot " + name + " successfully!");
-    sendBots();
-    res.sendStatus(200);
+    fs.exists(fName, (exists) => {
+        if (exists) {
+            res.status(400).send("ERROR: File " + name + " already exists.");
+            u.log("ERROR: Cannot receive " + name + ". File already exists.");
+            fs.unlink(path, (err) => {
+                if (err) {
+                    u.log("ERROR: Unlink file error: \n" + err.stack);
+                }
+            });
+        } else {
+            fs.rename(path, fName, (err) => {
+                if (err) {
+                    u.log("ERROR: Rename/Move file error: \n" + err.stack);
+                    res.sendStatus(500);
+                } else {
+                    u.log("INFO: Received bot " + name + " successfully!");
+                    res.sendStatus(200);
+                    sendBots();
+                }
+            });
+        }
+    });
 }
 
 function cleanBots(req, res) {
@@ -359,18 +383,22 @@ function cleanBots(req, res) {
         bots = getBotsList();
     }
     for (let i in bots) {
-        fs.unlinkSync(c.DIRS.botSrc + "/" + bots[i]);
+        fs.unlink(c.DIRS.botSrc + "/" + bots[i], (err) => {
+            if (err) {
+                u.log("ERROR: Unlink file error \n" + err.stack);
+            }
+        });
     }
     u.log("INFO: Cleaned bots ", ...bots, " successfully!");
-    sendBots();
     res.sendStatus(200);
+    sendBots();
 }
 
 function startGame(req, res) {
     let content = JSON.parse(req.body.content);
     data.playingBots = data.botSources = content.bots;
     setDynamicHeader(content);
-    let code = buildGame(bots);
+    let code = buildGame(content.bots);
     if (code == 1) {
         res.status(500).send("ERROR: Compilation failed. Check CMakeLog");
         u.log("ERROR: Compilation failed. Check CMakeLog");
@@ -395,16 +423,21 @@ function setDynamicHeader(content) {
         data.playingBots.push("-= D3V310P3R =-");
     }
     header += "define MAP_TYPE \"" + content.map + "\"";
-    fs.writeFileSync(headerPath, header);
-    u.log("INFO: Dynamic header created");
+    fs.writeFile(headerPath, header, (err) => {
+        if (err) {
+            u.log("ERROR: Failed creating dynamic header")
+        } else {
+            u.log("INFO: Dynamic header created");
+        }
+    });
 }
 
-function buildGame() {
+function buildGame(bots) {
     u.log("INFO: Build process started");
-    for(let i in data.botSources){
-        data.botSources[i] = c.DIRS.botSrc + "/" + data.botSources[i];
+    for (let i in bots) {
+        bots[i] = c.DIRS.botSrc + "/" + bots[i];
     }
-    process.env.BOT_SOURCES = data.botSources.join(" ");
+    process.env.BOT_SOURCES = bots.join(" ");
     let result = exec.spawnSync("cmake -H. -B_build " +
         "-DCMAKE_INSTALL_PREFIX=_install -DCMAKE_BUILD_TYPE=Release && " +
         "cmake --build _build --clean-first", {

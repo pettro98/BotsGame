@@ -1,6 +1,6 @@
 "use strict";
 
-const c = require("./constants.js");
+const c = require("./serv_constants.js");
 
 var util = module.exports;
 
@@ -12,7 +12,7 @@ util.cutPathExt = cutPathExt;
 util.log = log;
 util.logReq = logReq;
 util.sendFileX = sendFileX;
-util.sendFile = sendFile;
+util.sendFILE = sendFILE;
 
 function getDate() {
 	let date = "[" + new Date().toUTCString() + "]: ";
@@ -63,6 +63,6 @@ function sendFileX(res, next, path, type) {
 	});
 };
 
-function sendFile(res, next, file) {
+function sendFILE(res, next, file) {
 	util.sendFileX(res, next, c.FILES[file].path, c.FILES[file].type);
 };
