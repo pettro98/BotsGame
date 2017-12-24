@@ -45,7 +45,7 @@ function log(...args) {
 };
 
 function logReq(req, res, next) {
-	log(req.method, req.url, req.files);
+	log(req.method, req.url, req.body, req.get("content-type"));
 	next();
 };
 

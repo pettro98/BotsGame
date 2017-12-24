@@ -17,6 +17,7 @@ const multipart = require("connect-multiparty");
 const fs = require('fs');
 const favicon = require("serve-favicon");
 const exec = require("child_process");
+const bodyparser = require("body-parser");
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +59,10 @@ var polls = {
 ////////////////////////////////////////////////////////////////////////////////
 
 app.use(multipart());
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({
+    extended: true
+}));
 app.use(u.logReq);
 app.use(favicon(c.FILES.favicon.path));
 app.use("/scripts", express.static(c.DIRS.scripts));
@@ -69,13 +74,15 @@ app.use("/scripts", express.static(c.DIRS.scripts));
 
 app.get("/", getMain);
 
-app.get("/bots", getBots);
-app.get("/bots/log", getCMakeLog);
 app.post("/bots", postBots);
 
+app.get("/cmake_log", getCMakeLog);
+
 app.get("/game", getGame);
-app.get("/game/data", getGameData);
-app.post("/game/data", postGameData);
+
+app.post("/game", postGame);
+
+app.post("/data", postData);
 
 app.use(notFound);
 
@@ -126,17 +133,18 @@ function notFound(req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////
 //  /bots HANDLER FUNCTIONS
 
-function getBots(req, res, next) {
-    if (deniedWithoutXHR(req, res)) return;
-    u.log("INFO: Received getBots request");
-    registerBotsRequest(req, res);
-}
-
 function postBots(req, res, next) {
     if (deniedWithoutXHR(req, res)) return;
     u.log("INFO: Received postBots request");
+
     let command = req.body.command;
     switch (command) {
+        case "get":
+            {
+                u.log("INFO: Received 'get' command");
+                processBotsReq(req, res);
+                break;
+            }
         case "add":
             {
                 u.log("INFO: Received 'add' command");
@@ -169,13 +177,14 @@ function postBots(req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////
 //  /game/data HANDLER FUNCTIONS
 
-function getGameData(req, res, next) {
+function postGame(req, res, next) {
     if (deniedWithoutXHR(req, res)) return;
-    u.log("INFO: Received getGameData request");
-    registerGameRequest(req, res);
+    u.log("INFO: Received postGame request");
+    processGameReq(req, res);
 }
 
-function postGameData(req, res, next) {
+function postData(req, res, next) {
+    u.log("INFO: Received postData request");
     let body = JSON.parse(req.body);
     data.currentStats = body.stats;
     data.lastTurn = body.lastTurn;
@@ -195,30 +204,34 @@ function postGameData(req, res, next) {
 ////////////////////////////////////////////////////////////////////////////////
 //  LONG POLL FUNCTIONS
 
-function registerBotsRequest(req, res) {
-    let body = JSON.parse(req.body);
+function processBotsReq(req, res) {
+    let content = JSON.parse(req.body.content);
     let tmp = getBotsList();
-    if (body.state != data.state) {
+    if (content.state != data.state) {
         res.status(200).json({
             state: data.state
         });
         u.log("INFO: Immediately sent game state");
         return
     }
-    if (body.bots.length != tmp.length) {
+    if (content.bots.length != tmp.length) {
         res.status(200).json({
             bots: tmp
         });
         u.log("INFO: Immediately sent bots list (different count)");
         return;
     }
-    for (let i in body.bots) {
-        if (tmp.indexOf(body.bots[i]) == -1) {
+    for (let i in content.bots) {
+        if (tmp.indexOf(content.bots[i]) == -1) {
             res.status(200).json(tmp);
             u.log("INFO: Immediately sent bots list (different content)");
             return;
         }
     }
+    registerBotsReq(req, res);
+}
+
+function registerBotsReq(req, res) {
     req.on("close", () => {
         let pos = polls.bots.req.indexOf(this);
         polls.bots.res.splice(pos, 1);
@@ -229,9 +242,9 @@ function registerBotsRequest(req, res) {
     u.log("INFO: Registered bots request");
 }
 
-function registerGameRequest(req, res) {
-    let body = JSON.parse(req.body);
-    if (body.state != data.state) {
+function processGameReq(req, res) {
+    let content = JSON.parse(req.body.content);
+    if (content.state != data.state) {
         res.status(200).json({
             state: data.state,
             stat: data.stats
@@ -239,29 +252,29 @@ function registerGameRequest(req, res) {
         u.log("INFO: Immediately sent state");
         return;
     }
-    if (body.turn > 0) {
-        if (body.turn > data.lastTurn) {
+    if (content.turn > 0) {
+        if (content.turn > data.lastTurn) {
             res.sendStatus(400);
             u.log("ERROR: Wrong turn number");
             return;
         }
         let tmp = {
-            field: data.fieldHistory[body.turn - 1]
+            field: data.fieldHistory[content.turn - 1]
         }
-        if (body.lastTurn != data.lastTurn) {
+        if (content.lastTurn != data.lastTurn) {
             tmp.lastTurn = data.lastTurn;
             tmp.stats = data.stats;
         }
         res.status(200).json(tmp);
-        u.log("INFO: Immediately sent data on turn " + body.turn);
+        u.log("INFO: Immediately sent data on turn " + content.turn);
         return;
     } else {
-        if (body.lastTurn > data.lastTurn) {
+        if (content.lastTurn > data.lastTurn) {
             res.sendStatus(400);
             u.log("ERROR: Wrong lastTurn number");
             return;
         }
-        if (body.lastTurn < data.lastTurn) {
+        if (content.lastTurn < data.lastTurn) {
             res.status(200).json({
                 lastTurn: data.lastTurn,
                 field: data.fieldHistory[data.lastTurn - 1],
@@ -271,6 +284,10 @@ function registerGameRequest(req, res) {
             return;
         }
     }
+    registerGameReq(req, res);
+}
+
+function registerGameReq(req, res) {
     req.on("close", () => {
         let pos = polls.bots.req.indexOf(this);
         polls.bots.res.splice(pos, 1);
@@ -289,9 +306,9 @@ function sendGameData() {
         field: data.fieldHistory[data.lastTurn - 1]
     }
     for (let i in resp) {
-        resp.status(200).json(tmp);
+        resp[i].status(200).json(tmp);
     }
-    resp = [];
+    polls.game.res = [];
     polls.game.req = [];
     u.log("INFO: Sent updated game data");
 }
@@ -317,14 +334,14 @@ function sendState() {
 
 function sendBots() {
     let resp = polls.bots.res;
-    let tmp = {
+    let tmp = JSON.stringify({
         state: data.state,
         bots: getBotsList()
-    }
+    });
     for (let i in resp) {
-        resp.status(200).json(tmp);
+        resp[i].status(200).send(tmp);
     }
-    resp = [];
+    polls.bots.res = [];
     polls.bots.req = [];
     u.log("INFO: Sent updated bots list");
 }

@@ -10,20 +10,17 @@ const UpdateButton = document.getElementById("updateButton");
 
 const GameMsg = document.getElementById("gameMsg");
 const GameLink = document.getElementById("gameLink");
+
 const Duel = document.getElementById("duel");
 const Classic = document.getElementById("classic");
 const Random = document.getElementById("random");
 const Count = document.getElementById("count");
+
 const Table = document.getElementById("table");
 
-////////////////////////////////////////////////////////////////////////////////
-
-var timeoutID = null;
-var tableData = {};
-var xhrRequests = {};
-var running = false;
 
 ////////////////////////////////////////////////////////////////////////////////
+//  WEBPAGE CONTROLLING
 
 UpdateButton.onclick = updateData;
 SendButton.onclick = sendSource;
@@ -33,224 +30,213 @@ Source.onchange = function () {
     SourceName.innerText = Source.files[0].name;
 }
 
+if (0 in Source.files) {
+    SourceName.innerText = Source.files[0].name;
+}
+
+function setCounter(enable, val) {
+    if (val !== undefined) {
+        Count.value = val;
+    }
+    if (enable) {
+        Count.removeAttribute("disabled");
+    } else {
+        Count.setAttribute("disabled", "");
+    }
+}
+
+setCounter(Random.checked);
+
+Random.onclick = function () {
+    setCounter(true)
+}
+Duel.onclick = function () {
+    setCounter(false, "2")
+}
+Classic.onclick = function () {
+    setCounter(false, "4")
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//  DATA STRUCTURES
+
+var tableData = {
+    bots: [],
+    rows: []
+};
+var gameState = "idle";
+var requests = {};
+
+//
 ////////////////////////////////////////////////////////////////////////////////
 
-function updateData() {
-    function onload(xhr) {
-        let data = JSON.parse(xhr.responseText)
-        refreshTable(data.bots);
-        setRunning(data.runnning);
-        if(timeoutID !== null){
-            clearTimeout(timeoutID);
-        }
-        timeoutID = setTimeout(function () {
-            sendXHR("getBots", "GET", "/bots", null, 5000, onload);
-        }, 2000);
-    }
+////////////////////////////////////////////////////////////////////////////////
+//  
 
-    sendXHR("getBots", "GET", "/bots", null, 5000, onload);
+function updateData() {
+    sendXHR("getBots", "POST", "/bots", createFormData({
+        command: "get",
+        content: JSON.stringify({
+            bots: tableData.bots,
+            state: gameState
+        })
+    }), 10000, function () {
+        if (this.status == 200) {
+            refreshData(JSON.parse(this.responseText));
+            setTimeout(updateData, 0);
+        } else {
+            setTimeout(updateData, 10000);
+        }
+    }, function () {
+        setTimeout(updateData, 0);
+    });
 }
 
 updateData();
 
-function sendSource() {
-    let file = Source.files[0];
-
-    if (!file) {
-        alert("nothing to upload");
+function refreshData(data) {
+    if (data.state && data.state != gameState) {
+        gameState = data.state;
+        setState(gameState);
+    }
+    if (data.bots === undefined) {
         return;
     }
-
-    if (file.name in tableData) {
-        alert("bot already exists");
-        return;
-    }
-
-    let fdata = createFormData({
-        command: "add",
-        source: file
-    });
-
-    sendXHR("addBotSource", "POST", "/bots", fdata, 5000, function (xhr) {
-        if (xhr.status == 200) {
-            let data = JSON.parse(xhr.responseText)
-            updateData(data);
-        } else if (xhr.status == 400) {
-            alert(xhr.responseText);
+    let tmpBots = [];
+    let tmpRows = [];
+    for (let i in tableData.bots) {
+        if (data.bots.indexOf(tableData.bots[i]) != -1) {
+            tmpBots.push(tableData.bots[i]);
+            tmpRows.push(tableData.rows[i])
+        } else {
+            Table.removeChild(tableData.rows[i].row);
         }
-    });
+    }
+    tableData.bots = tmpBots;
+    tableData.rows = tmpRows;
+    for (let i in data.bots) {
+        if (tableData.bots.indexOf(data.bots[i]) == -1) {
+            tableData.rows.push(addTableRow(data.bots[i]));
+            tableData.bots.push(data.bots[i]);
+        }
+    }
 }
 
-function cleanSources() {
-    let bots = getSelected();
-    if (bots.length == 0) {
-        if (confirm("You haven't selected any bots. \n" +
-            "WARNING: If you press OK it will clean all.")) {
-            var fdata = createFormData({
-                command: "clean"
-            });
-        } else return;
+function setState(state) {
+    if (state == "running" || state == "finished") {
+        GameLink.removeAttribute("hidden");
     } else {
-        var fdata = createFormData({
-            command: "clean",
-            bots: bots.join(" ")
-        });
+        GameLink.setAttribute("hidden", "");
     }
-    sendXHR("cleanBotSource", "POST", "/bots", fdata, 5000, function () {
-        updateData();
-    });
 }
 
-function startGame() {
-    startAnim();
-
-    let bots = getSelected();
-
-    if (bots.length > Count.value) {
-        alert("ERROR: Wrong number of bots selected");
-        return;
-    }
-
-    if (bots.length != 0) {
-        if (!confirm("You haven't selected any bots. \n" +
-            "Press OK to start battle between developers' bots.")) return;
-    }
-
-    let fdata = createFormData({
-        command: "start",
-        count: Count.value,
-        bots: bots.join(" "),
-        map: getMap()
-    });
-
-    sendXHR("POST", "/bots", form, function (xhr) {
-        return function () {
-            stopAnim();
-            if (xhr.status == 200) {
-                window.open("/game");
-            } else {
-                alert(xhr.responseText);
-            }
-        }
-    });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function clearTable() {
-    Table.innerHTML = "<tr><td>Name</td><td></td></tr>";
+function cleanTable() {
+    table.innerHTML = "<tr><td>Name</td><td>Select</td></tr>";
 }
 
 function addTableRow(name) {
-    let id = "rowID_" + tableData.length;
     let row = document.createElement("tr");
-    let checkCell = document.createElement("td");
-    let checkBox = document.createElement("input");
-    checkBox.setAttribute("type", "checkbox");
-    checkCell.appendChild(checkBox);
     row.innerHTML = "<td>" + name + "</td>";
-    row.id = id;
-    row.appendChild(checkCell);
+    let cell = document.createElement("td");
+    let check = document.createElement("input");
+    check.setAttribute("type", "checkbox");
+    cell.appendChild(check);
+    row.appendChild(cell);
     Table.appendChild(row);
-    tableData[name] = [row, checkBox];
-}
-
-function refreshTable(bots) {
-    if (tableData.length === 0) {
-        for (let i in bots) {
-            addTableRow(bots[i]);
-        }
-    } else {
-        for (let i in bots) {
-            if (!(bots[i] in tableData)) {
-                addTableRow(bots[i]);
-            }
-        }
-        for (let i in tableData) {
-            if (bots.indexOf(i) == -1) {
-                Table.removeChild(tableData[i][0]);
-                delete tableData[i];
-            }
-        }
-    }
+    return {
+        check: check,
+        row: row
+    };
 }
 
 function sendXHR(id, method, url, data, timeout, onload, ontimeout, onerror) {
     let xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
-    xhr.timeout = timeout;
-
-    if (onload) {
-        xhr.onload = function (event) {
-            onload(xhr, event);
-        }
-    }
-
-    if (ontimeout) {
-        xhr.ontimeout = function (event) {
-            ontimeout(xhr, event);
-        }
-    }
-
-    if (onerror) {
-        xhr.onerror = function (event) {
-            onerror(xhr, event);
-        }
-    }
-
     xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-    xhr.send(data);
 
-    if (xhrRequests[id]) {
-        xhrRequests[id].abort();
-        delete xhrRequests[id];
+    xhr.timeout = +timeout;
+    xhr.onload = onload;
+    xhr.onerror = onerror;
+
+    xhr.ontimeout = ontimeout;
+
+    if (id in requests) {
+        requests[id].abort();
     }
-    xhrRequests[id] = xhr;
+    requests[id] = xhr;
+
+    xhr.send(data);
+}
+
+function sendSource() {
+    let fdata = createFormData({
+        command: "add",
+        source: Source.files[0]
+    });
+    sendXHR("postBots", "POST", "/bots", fdata, 0, alertIfNotOK);
 }
 
 function createFormData(data) {
-    if (data === undefined) return;
-    let fdata = new FormData();
+    let tmp = new FormData();
     for (let i in data) {
-        fdata.append(i, data[i]);
+        tmp.append(i, data[i]);
     }
-    return fdata;
+    return tmp;
 }
 
-function getMap() {
-    if (Duel.checked) {
-        return "duel";
-    } else if (Classic.checked) {
-        return "classic";
-    } else if (Random.checked) {
-        return "random";
+function alertIfNotOK() {
+    if (this.status != 200) {
+        alert(this.responseText);
     }
 }
 
-function setRunning(running) {
-    if (running) {
-        StartButton.setAttribute("disabled", "");
-        GameLink.removeAttribute("hidden");
-    } else {
-        StartButton.removeAttribute("disabled");
-        GameLink.setAttribute("hidden", "");
+function cleanSources() {
+    let bots = getSelected();
+    if (bots.length == tableData.bots.length || bots.length == 0) {
+        if (!confirm("WARNING: This will clear all bots on server.\nContinue?")) {
+            return;
+        } else {
+            bots = tableData.bots;
+        }
     }
+    let fdata = createFormData({
+        command: "clean",
+        content: JSON.stringify(bots)
+    })
+    sendXHR("postBots", "POST", "/bots", fdata, 0, alertIfNotOK);
 }
 
 function getSelected() {
-    let bots = [];
-    for (let i in tableData) {
-        if (tableData[i][1].checked) {
-            bots.push(i);
+    let tmp = [];
+    for (let i in tableData.rows) {
+        if (tableData.rows[i].check.checked) {
+            tmp.push(tableData.bots[i]);
         }
     }
-    return bots;
+    return tmp;
 }
 
-function startAnim() {
-    GameMsg.removeAttribute("hidden");
+function startGame() {
+    let bots = getSelected();
+    let fdata = createFormData({
+        command: "start",
+        content: JSON.stringify({
+            bots: bots,
+            count: Count.value,
+            map: getMap()
+        })
+    });
+    sendXHR("postBots", "POST", "/bots", fdata, 0, alertIfNotOK);
 }
 
-function stopAnim() {
-    GameMsg.setAttribute("hidden", "");
+function getMap() {
+    if (Random.checked) {
+        return "random";
+    } else if (Classic.checked) {
+        return "classic";
+    } else if (Duel.checked) {
+        return "duel";
+    } else {
+        return "undefined";
+    }
 }

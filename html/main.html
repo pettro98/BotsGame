@@ -5,7 +5,24 @@
     <meta charset="utf-8">
     <title>AntiYoyBots</title>
     <link rel="icon" href="/favicon.ico">
-    <script type="text/javascript">//setInterval(function () { location.reload() }, 1000);</script>
+    <script type="text/javascript">
+    // uncomment for better debugging experience
+    // setInterval(function () { location.reload() }, 10000);
+    // comment it to stop this page refreshing
+    </script>
+    <style>
+    .button
+    {
+        background: darkgreen;
+        font-style: italic;
+        color: white;
+        padding: 1vh;
+        margin-right: 1vh;
+        border: 0vh;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12pt
+    }
+    </style>
 </head>
 
 <body style="margin: 3vh;">
@@ -16,15 +33,15 @@
         <div style="background: lightgreen;float: left;padding: 2vh;margin-right: 1vh;">
             <p>
                 <h3>You can upload your .cpp files here</h3>
-                <label style="background: darkgreen;font-style: italic;color: white;padding: 1vh;margin-right: 1vh;">
-                    <input id="source" type="file" style="width: 0;">Upload File</label>
+                <label class="button">
+                    <input id="source" type="file" style="width: 0;">Select File</label>
                 Currently selected file:
-                <span id="sourceName" style="font-weight: bold;">null</span>
+                <span id="sourceName" style="font-weight: bold;">undefined</span>
             </p>
             <p style="margin-top: 4vh;">
-                <input type="button" id="sendButton" value="Send">
-                <input type="button" id="cleanButton" value="Clean selected">
-                <input type="button" id="startButton" value="Start with selected">
+                <input class="button" type="button" id="sendButton" value="Send ">
+                <input class="button" type="button" id="cleanButton" value="Clean selected">
+                <input class="button" type="button" id="startButton" value="Start with selected">
             </p>
             <p>
                 <big>Select map type:</big>
@@ -72,7 +89,7 @@
             <br> 6. You must be connected to Internet in case CMake needs to download libraries
         </div>
     </div>
+    <script type="text/javascript" src="/scripts/main_page.js"></script>
 </body>
-<script type="text/javascript" src="/scripts/main_page.js"></script>
 
 </html>
