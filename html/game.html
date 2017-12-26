@@ -32,7 +32,7 @@
                         "cyan", "magenta",
                         "lightblue", "gold"];
 
-                    var oldGroup = new Group().addTO(stage);
+                    var oldGroup = new Group().addTo(stage);
                     var newGroup = new Group();
                     var gameData = {};
 
@@ -82,9 +82,11 @@
         </script>
     </div>
     <div>
-        <table id="statTable"></table>
-        <input id="back" type="button" value="<<" disabled="" onclick="if(turnNum != 0){getData(--turn);}">
-        <input id="back" type="button" value=">>" disabled="" onclick="if(turnNum != stat.turn){getData(++turn);}">
+        <input id="back" type="button" value="<<" disabled="">
+        <span>Showing turn #</span>
+        <span id="count">0</span>
+        <input id="forward" type="button" value=">>" disabled="">
+        <table id="statTable" border="2"></table>
     </div>
     <script type="text/javascript" src="/scripts/game_page.js">
     </script>

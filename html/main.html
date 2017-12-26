@@ -6,9 +6,7 @@
     <title>AntiYoyBots</title>
     <link rel="icon" href="/favicon.ico">
     <script type="text/javascript">
-    // uncomment for better debugging experience
     // setInterval(function () { location.reload() }, 10000);
-    // comment it to stop this page refreshing
     </script>
     <style>
     .button
@@ -68,7 +66,8 @@
         </div>
         <div style="float: left;padding: 2vh">
             <span id="gameMsg" hidden="">Game is preparing. You will be redirected when it is ready.</span>
-            <a href="/game" id="gameLink" hidden="">You can see game process here</a>
+            <a id="gameLink" onclick="window.open('/game');" hidden="">You can see game process here</a>
+            <input type="button" id="logButton" value="CMake log">
             <h3>Currently uploaded bots:</h3>
             <table id="table" width="200" border="2">
                 <tr>

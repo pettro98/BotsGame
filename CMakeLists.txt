@@ -28,9 +28,9 @@ set(SOURCE_FILES
         arch/General.h
         arch/Hex.cpp
         arch/Hex.h
-        arch/IFullAccess.h
         arch/IGetData.h
         arch/ISetData.h
+        arch/IFullAccess.h
         arch/Main.cpp
         arch/Map.cpp
         arch/Map.h

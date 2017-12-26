@@ -3,7 +3,7 @@
 var constants = module.exports;
 
 constants.GAME_EXEC = __dirname + "/_install/bin/game";
-constants.PORT = process.env.PORT || 80;
+constants.PORT = process.env.PORT || 8080;
 constants.PATH_DELIM = "/";
 constants.FILES = {
     main: {

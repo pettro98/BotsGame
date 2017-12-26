@@ -39,7 +39,8 @@ var data = {
     lastTurn: 0,
     playingBots: [],
     currentStats: {},
-    fieldHistory: []
+    fieldHistory: [],
+    botSources: []
 };
 
 var polls = {
@@ -91,6 +92,15 @@ app.use(notFound);
 //  LAUNCH SERVER
 ////////////////////////////////////////////////////////////////////////////////
 
+fs.exists("./cmake_log.txt", (exists) => {
+    if (exists) {
+        fs.unlink("./cmake_log.txt", (err) => {
+            u.log("ERROR: Error unlinking cmake_log.txt")
+        });
+        u.log("INFO: cmake_log.txt deleted successfully");
+    }
+})
+
 // listen on environment or 80 port
 app.listen(c.PORT, () => {
     u.log("INFO: Server listening on port " + c.PORT);
@@ -110,7 +120,7 @@ function getGame(req, res, next) {
 }
 
 function getCMakeLog(req, res, next) {
-    let log = c.FILES.cmake_log.path;
+    let log = "./cmake_log.txt";
     fs.exists(log, (exists) => {
         if (exists) {
             res.download(log);
@@ -212,7 +222,7 @@ function processBotsReq(req, res) {
             state: data.state
         });
         u.log("INFO: Immediately sent game state");
-        return
+        return;
     }
     if (content.bots.length != tmp.length) {
         res.status(200).json({
@@ -247,7 +257,8 @@ function processGameReq(req, res) {
     if (content.state != data.state) {
         res.status(200).json({
             state: data.state,
-            stat: data.stats
+            stat: data.stats,
+            bots: data.playingBots
         });
         u.log("INFO: Immediately sent state");
         return;
@@ -259,7 +270,9 @@ function processGameReq(req, res) {
             return;
         }
         let tmp = {
-            field: data.fieldHistory[content.turn - 1]
+            field: data.fieldHistory[content.turn - 1],
+            turn: content.turn,
+            bots: data.playingBots
         }
         if (content.lastTurn != data.lastTurn) {
             tmp.lastTurn = data.lastTurn;
@@ -278,7 +291,8 @@ function processGameReq(req, res) {
             res.status(200).json({
                 lastTurn: data.lastTurn,
                 field: data.fieldHistory[data.lastTurn - 1],
-                stats: data.currentStats
+                stats: data.currentStats,
+                bots: data.playingBots
             });
             u.log("INFO: Immediately sent data on last turn");
             return;
@@ -303,7 +317,8 @@ function sendGameData() {
     let tmp = {
         stats: data.currentStats,
         lastTurn: data.lastTurn,
-        field: data.fieldHistory[data.lastTurn - 1]
+        field: data.fieldHistory[data.lastTurn - 1],
+        bots: data.playingBots
     }
     for (let i in resp) {
         resp[i].status(200).json(tmp);
@@ -321,13 +336,13 @@ function sendState() {
     for (let i in gRes) {
         gRes[i].status(200).json(tmp);
     }
-    gRes = [];
+    polls.game.res = [];
     polls.game.req = [];
     let bRes = polls.bots.res;
     for (let i in bRes) {
         bRes[i].status(200).json(tmp);
     }
-    bRes = [];
+    polls.bots.res = [];
     polls.bots.req = [];
     u.log("INFO: Sent updated game state");
 }
@@ -413,19 +428,25 @@ function cleanBots(req, res) {
 
 function startGame(req, res) {
     let content = JSON.parse(req.body.content);
-    data.playingBots = data.botSources = content.bots;
+    data.botSources = content.bots;
+    data.playingBots = [];
+    for (let i in data.botSources) {
+        data.playingBots[i] = data.botSources[i]
+    }
     setDynamicHeader(content);
     let code = buildGame(content.bots);
-    if (code == 1) {
-        res.status(500).send("ERROR: Compilation failed. Check CMakeLog");
-        u.log("ERROR: Compilation failed. Check CMakeLog");
-    } else if (code == 127 || code === null) {
+    if (code == 127 || code === null) {
         res.status(500).send("ERROR: Compilation failed. CMake not found. Check CMake installation");
         u.log("ERROR: Compilation failed. CMake not found. Check CMake installation");
+    
+    } else if (code != 0) {
+        res.status(500).send("ERROR: Compilation failed. Check CMakeLog");
+        u.log("ERROR: Compilation failed. Check CMakeLog");
+    } else {
+        execGame();
+        u.log("INFO: Started game process");
+        res.sendStatus(200);
     }
-    execGame();
-    u.log("INFO: Started game process");
-    res.sendStatus(200);
 }
 
 function setDynamicHeader(content) {
@@ -435,34 +456,54 @@ function setDynamicHeader(content) {
     for (; i < content.bots.length && i < 6; i++) {
         header += "#define BOT_" + i + " " + u.cutPathExt(content.bots[i]) + "\n";
     }
-    for (; i <= content.count; i++) {
+    for (; i < content.count; i++) {
         header += "#define BOT_" + i + " " + "game_module::Bot \n";
         data.playingBots.push("-= D3V310P3R =-");
     }
-    header += "define MAP_TYPE \"" + content.map + "\"";
-    fs.writeFile(headerPath, header, (err) => {
-        if (err) {
-            u.log("ERROR: Failed creating dynamic header")
-        } else {
-            u.log("INFO: Dynamic header created");
-        }
-    });
+    header += "#define MAP_TYPE \"" + content.map + "\"";
+    fs.writeFileSync(headerPath, header);
+    // , (err) => {
+    //     if (err) {
+    //         u.log("ERROR: Failed creating dynamic header")
+    //     } else {
+    u.log("INFO: Dynamic header created");
+    //     }
+    // });
 }
 
 function buildGame(bots) {
     u.log("INFO: Build process started");
+    data.state = "building";
+    sendState();
     for (let i in bots) {
         bots[i] = c.DIRS.botSrc + "/" + bots[i];
     }
+    if (fs.existsSync("./cmake_log.txt")) {
+        fs.unlinkSync("./cmake_log.txt");
+    }
+    // let logStream = fs.createWriteStream("./cmake_log.txt", { flags: "a" });
     process.env.BOT_SOURCES = bots.join(" ");
-    let result = exec.spawnSync("cmake -H. -B_build " +
-        "-DCMAKE_INSTALL_PREFIX=_install -DCMAKE_BUILD_TYPE=Release && " +
-        "cmake --build _build --clean-first", {
-            env: process.env
+    let result = exec.spawnSync("cmake", ["-H.", "-B_build",
+        "-DCMAKE_INSTALL_PREFIX=_install", "-DCMAKE_BUILD_TYPE=Release"], {
+            env: process.env,
+            maxBuffer: 1024*1024
         });
+    fs.writeFileSync("./cmake_log.txt", result.output, { flag: "a" });
+    result = exec.spawnSync("cmake", ["--build", "_build"], {
+        env: process.env,
+        maxBuffer: 1024*1024
+    });
+    fs.writeFileSync("./cmake_log.txt", result.output, { flag: "a" });
+    result = exec.spawnSync("cmake", ["--build", "_build", "--target", "install"], {
+        env: process.env,
+        maxBuffer: 1024*1024
+    });
+    // logStream.end();
+    fs.writeFileSync("./cmake_log.txt", result.output, { flag: "a" });
     u.log("INFO: Build process finished");
-    fs.writeFileSync("./CMakeLog.txt", result.output);
     u.log("INFO: CMakeLog file created");
+    data.state = "idle";
+    sendState();
     return result.status;
 }
 
@@ -480,5 +521,6 @@ function execGame() {
             }
         });
     data.state = "running";
+    sendState();
     u.log("INFO: Game process started!");
 }
