@@ -7,7 +7,7 @@
 namespace game_module
 {
 	/*!
-	\brief Пустой класс объединяет методы классов IGetData и ISetData.
+	\brief пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ IGetData пїЅ ISetData.
 	*/
 	class IFullAccess
 		: public IGetData

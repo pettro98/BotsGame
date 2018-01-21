@@ -41,6 +41,11 @@ namespace game_module
 		return HexUnit;
 	}
 
+	Unit * Hex::get_unit() const
+	{
+		return HexUnit;
+	}
+
 	Capital * Hex::get_capital()
 	{
 		return HexCapital;

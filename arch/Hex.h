@@ -70,6 +70,7 @@ namespace game_module
 		\brief Метод возвращает поле HexUnit объекта класса.
 		*/
 		Unit * get_unit();
+		Unit * get_unit() const;
 		/*!
 		\brief Метод возвращает поле HexCapital объекта класса.
 		*/

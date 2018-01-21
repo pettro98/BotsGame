@@ -1,0 +1,45 @@
+,-- [hunter] Calculating Toolchain-SHA1
+-- [hunter] Calculating Config-SHA1
+-- [hunter] HUNTER_ROOT: /home/pettro98/.hunter
+-- [hunter] [ Hunter-ID: 8f27f3a | Toolchain-ID: e1266bb | Config-ID: 13cf9d1 ]
+-- [hunter] BOOST_ROOT: /home/pettro98/.hunter/_Base/8f27f3a/e1266bb/13cf9d1/Install (ver.: 1.65.1)
+-- Boost version: 1.65.1
+-- [hunter] BOOST_ROOT: /home/pettro98/.hunter/_Base/8f27f3a/e1266bb/13cf9d1/Install (ver.: 1.65.1)
+-- [hunter] BOOST_ROOT: /home/pettro98/.hunter/_Base/8f27f3a/e1266bb/13cf9d1/Install (ver.: 1.65.1)
+-- Boost version: 1.65.1
+-- Found the following Boost libraries:
+--   system
+-- [hunter] CURL_ROOT: /home/pettro98/.hunter/_Base/8f27f3a/e1266bb/13cf9d1/Install (ver.: 7.49.1-DEV-v9)
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/pettro98/Документы/Game2/_build
+,CMake Warning (dev) at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 2.4 is not supported by CMake >= 3.0.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at /usr/local/share/cmake-3.10/Modules/CheckSymbolExists.cmake:57 (if):
+  Policy CMP0054 is not set: Only interpret if() arguments as variables or
+  keywords when unquoted.  Run "cmake --help-policy CMP0054" for policy
+  details.  Use the cmake_policy command to set the policy and suppress this
+  warning.
+
+  Quoted variables like "x" will no longer be dereferenced when the policy is
+  set to NEW.  Since the policy is not set the OLD behavior will be used.
+Call Stack (most recent call first):
+  /usr/local/share/cmake-3.10/Modules/CheckSymbolExists.cmake:48 (__CHECK_SYMBOL_EXISTS_IMPL)
+  /usr/local/share/cmake-3.10/Modules/FindThreads.cmake:134 (CHECK_SYMBOL_EXISTS)
+  /home/pettro98/.hunter/_Base/Download/Hunter/0.19.160/8f27f3a/Unpacked/cmake/find/FindOpenSSL.cmake:376 (find_package)
+  /home/pettro98/.hunter/_Base/8f27f3a/e1266bb/13cf9d1/Install/lib/cmake/CURL/CURLConfig.cmake:35 (find_package)
+  CMakeLists.txt:18 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+,Scanning dependencies of target game
+[  9%] Building CXX object CMakeFiles/game.dir/arch/Game.cpp.o
+[ 18%] Building CXX object CMakeFiles/game.dir/arch/Main.cpp.o
+[ 27%] Linking CXX executable game
+[100%] Built target game
+,,[100%] Built target game
+Install the project...
+-- Install configuration: "Release"
+-- Installing: /home/pettro98/Документы/Game2/_install/bin/game
+,

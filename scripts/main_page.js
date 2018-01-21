@@ -7,6 +7,7 @@ const SendButton = document.getElementById("sendButton");
 const CleanButton = document.getElementById("cleanButton");
 const StartButton = document.getElementById("startButton");
 const UpdateButton = document.getElementById("updateButton");
+const LogButtton = document.getElementById("logButton");
 
 const GameMsg = document.getElementById("gameMsg");
 const GameLink = document.getElementById("gameLink");
@@ -26,6 +27,9 @@ UpdateButton.onclick = updateData;
 SendButton.onclick = sendSource;
 CleanButton.onclick = cleanSources;
 StartButton.onclick = startGame;
+LogButtton.onclick = function () {
+    window.open("/cmake_log");
+}
 Source.onchange = function () {
     SourceName.innerText = Source.files[0].name;
 }
@@ -96,6 +100,12 @@ updateData();
 
 function refreshData(data) {
     if (data.state && data.state != gameState) {
+        if (gameState == "building" && data.state == "running") {
+            window.open("/game");
+        }
+        if (data.state == "error") {
+            alert("game process finished with an error");
+        }
         gameState = data.state;
         setState(gameState);
     }
@@ -123,10 +133,18 @@ function refreshData(data) {
 }
 
 function setState(state) {
-    if (state == "running" || state == "finished") {
+    if (state == "running") {
         GameLink.removeAttribute("hidden");
-    } else {
+        GameMsg.setAttribute("hidden", "");
+        StartButton.setAttribute("disabled", "");
+    } else if (state == "finished" || state == "idle") {
         GameLink.setAttribute("hidden", "");
+        GameMsg.setAttribute("hidden", "");
+        StartButton.removeAttribute("disabled");
+    } else if (state == "building") {
+        GameLink.setAttribute("hidden", "");
+        GameMsg.removeAttribute("hidden");
+        StartButton.setAttribute("disabled", "");
     }
 }
 
@@ -217,6 +235,7 @@ function getSelected() {
 }
 
 function startGame() {
+    startAnim();
     let bots = getSelected();
     let fdata = createFormData({
         command: "start",
@@ -226,7 +245,20 @@ function startGame() {
             map: getMap()
         })
     });
-    sendXHR("postBots", "POST", "/bots", fdata, 0, alertIfNotOK);
+    sendXHR("postBots", "POST", "/bots", fdata, 0, function () {
+        if (this.status != 200) {
+            alert(this.responseText);
+        }
+        stopAnim();
+    });
+}
+
+function startAnim() {
+    GameMsg.removeAttribute("hidden");
+}
+
+function stopAnim() {
+    GameMsg.setAttribute("hidden", "");
 }
 
 function getMap() {

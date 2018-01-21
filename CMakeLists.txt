@@ -10,9 +10,15 @@ HunterGate(
 )
 
 project(game)
-
+hunter_add_package(Boost)
+find_package(Boost CONFIG REQUIRED)
+hunter_add_package(Boost COMPONENTS system)
+find_package(Boost CONFIG REQUIRED system)
 hunter_add_package(CURL)
 find_package(CURL CONFIG REQUIRED)
+
+find_package(Threads)
+
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -28,9 +34,9 @@ set(SOURCE_FILES
         arch/General.h
         arch/Hex.cpp
         arch/Hex.h
-        arch/IFullAccess.h
         arch/IGetData.h
         arch/ISetData.h
+        arch/IFullAccess.h
         arch/Main.cpp
         arch/Map.cpp
         arch/Map.h
@@ -45,6 +51,8 @@ set(SOURCE_FILES
 
 add_executable(game ${SOURCE_FILES})
 
-target_link_libraries(game CURL::libcurl)
+target_link_libraries(game Boost::boost Boost::system ${CMAKE_THREAD_LIBS_INIT} CURL::libcurl)
+
+target_include_directories(game PUBLIC arch PUBLIC bot_sources)
 
 install(TARGETS game RUNTIME DESTINATION bin)

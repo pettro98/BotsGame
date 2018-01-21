@@ -1,8 +1,11 @@
 #include "Game.h"
 #include "Bot.h"
+#include "dynamic.h"
 #include <algorithm> 
 #include <string>
 #include <map>
+#include <chrono>
+#include <thread>
 
 namespace game_module
 {
@@ -72,7 +75,7 @@ namespace game_module
 			throw("incorect_map_type");
 		}
 		GameController = new Controller(this);
-		GameView = new View();
+		GameView = new View(this);
 		place_players();
 	}
 
@@ -334,6 +337,12 @@ namespace game_module
 	std::vector<Player *> Game::get_bots()
 	{
 		std::vector<Player *> result;
+		result.push_back(new BOT_0(red, "dev"));
+        result.push_back(new BOT_1(green, "dev"));
+        result.push_back(new BOT_2(cyan, "dev"));
+        result.push_back(new BOT_3(purple, "dev"));
+        result.push_back(new BOT_4(blue, "dev"));
+        result.push_back(new BOT_5(yellow, "dev"));
 		return result;
 	}
 
@@ -400,6 +409,7 @@ namespace game_module
 			}
 			if (show_map)
 			{
+                std::this_thread::sleep_for(std::chrono::seconds(2));
 				GameView->show(*GameMap, Results);
 			}
 			this->double_trees();
