@@ -32,12 +32,9 @@
 *.app
 
 # Build dirs
-*/Debug/*
-*\Debug\*
-*/Release/*
-*\Release\*
-*/.vs/*
-*\.vs\*
+*[Dd]ebug/
+*[Rr]elease/
+*.vs/
 
 # VS project files
 *.sln
@@ -52,3 +49,7 @@
 *_install*
 *cmake-build*
 *.idea*
+node_modules/
+uploaded/*
+bot_sources/*
+*log*

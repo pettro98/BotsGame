@@ -32,59 +32,27 @@ namespace game_module {
                 const auto type = hex->get_unit_type();
                 std::string contents;
                 if (type != unit_type::none) {
-                    if (type == unit_type::army) {
-                        switch (unit->strength()) {
-                            case 1: {
-                                contents = "a1";
-                                break;
-                            }
-                            case 2: {
-                                contents = "a2";
-                                break;
-                            }
-                            case 3: {
-                                contents = "a3";
-                                break;
-                            }
-                            case 4: {
-                                contents = "a4";
-                                break;
-                            }
-                        }
-                    } else
-                        switch (unit->type()) {
-                            case unit_type::capital: {
-                                contents = "ca";
-                                break;
-                            }
-                            case unit_type::farm: {
-                                contents = "fa";
-                                break;
-                            }
-                            case unit_type::grave: {
-                                contents = "gr";
-                                break;
-                            }
-                            case unit_type::pine: {
-                                contents = "pi";
-                                break;
-                            }
-                            case unit_type::palm: {
-                                contents = "pa";
-                                break;
-                            }
-                            case unit_type::tower: {
-                                if (unit->strength() == 1) {
-                                    contents = "t1";
-                                } else {
-                                    contents = "t2";
-                                }
-                                break;
-                            }
-                        }
+                    int count = 0;
+                    switch (unit->type()) {
+                        case unit_type::army: //h, i, j, k
+                            contents += 'g' + unit->strength();
+                            break;
+                        case unit_type::tower: //f, g
+                            count += unit->strength();
+                        case unit_type::palm: //e
+                            count += 1;
+                        case unit_type::pine: //d
+                            count += 1;
+                        case unit_type::grave: //c
+                            count += 1;
+                        case unit_type::farm: //b
+                            count += 1;
+                        case unit_type::capital: //a
+                            content += 'a' + count;
+                    }
                 }
-                row.push_back(json({{"owner",    owner},
-                                    {"contents", contents.c_str()}}));
+                row.push_back(json({{"O",            owner},
+                                    {"C", contents.c_str()}}));
             }
             data.push_back(row);
         }
@@ -92,12 +60,12 @@ namespace game_module {
     }
 
     json convertStats(const Result &res) {
-        json stats({{"last_turn",    res.last_turn},
-                    {"built_armies", res.built_armies},
-                    {"built_farms",  res.built_farms},
-                    {"built_towers", res.built_towers},
-                    {"moves",        res.moves},
-                    {"winner",       res.winner + 1}});
+        json stats({{"LT",    res.last_turn},
+                    {"BA", res.built_armies},
+                    {"BF",  res.built_farms},
+                    {"BT", res.built_towers},
+                    {"M",         res.moves},
+                    {"W",    res.winner + 1}});
         return stats;
     }
 
@@ -116,11 +84,14 @@ void showCURL(const std::string &requestData){
     if(curl) {
         curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/data");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData.c_str());
-        struct curl_slist *chunk = NULL;
+        struct curl_slist *headers = NULL;
 
-        chunk = curl_slist_append(chunk, "Content-Type: application/json");
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        headers = curl_slist_append(headers, "Expect:");
 
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        curl_slist_free_all(headers);
 
         res = curl_easy_perform(curl);
         if(res != CURLE_OK)
@@ -137,13 +108,11 @@ void showCURL(const std::string &requestData){
         auto turn = MyGetData->current_turn();
         auto data = convertMap(newState);
         auto stats = convertStats(res);
-        json full_Data({{"lastTurn", turn},
-                        {"field",    data},
-                        {"stats",    stats}});
+        json full_Data({{"CT", turn},
+                        {"F",    data},
+                        {"S",    stats}});
 
         showCURL(full_Data.dump());
-
-//        showCURL("[[[\"lol\"],[\"kek\"]]]");
 
 //        boost::system::error_code ec;
 //        io_service io;
