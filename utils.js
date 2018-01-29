@@ -1,13 +1,11 @@
-import { equal } from "assert";
-
 "use strict";
 
 const utils = module.exports = {};
 
 const PORT = utils.PORT = process.env.PORT || 80;
 const PAGES = utils.PAGES = {
-    lobby: "./html/lobby.html",
-    game: "./html/game.html"
+    lobby: __dirname + "/html/lobby.html",
+    game: __dirname + "/html/game.html"
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,10 +41,11 @@ function deepLog(...args) {
     let out = process.stdout;
     for (let i in args) {
         if (typeof args[i] === "object") {
-            out.write(JSON.stringify(args[i]));
+            out.write(JSON.stringify(args[i], null, 2));
         } else {
             out.write("" + args[i]);
         }
+        out.write(" ");
     }
     out.write("\n");
 }

@@ -23,7 +23,7 @@ const Table = document.getElementById("table");
 ////////////////////////////////////////////////////////////////////////////////
 //  WEBPAGE CONTROLLING
 
-UpdateButton.onclick = updateData;
+UpdateButton.onclick = subscribe;
 SendButton.onclick = sendSource;
 CleanButton.onclick = cleanSources;
 StartButton.onclick = startGame;
@@ -77,59 +77,122 @@ var requests = {};
 ////////////////////////////////////////////////////////////////////////////////
 //  
 
-function updateData() {
-    sendXHR("getBots", "POST", "/bots", createFormData({
-        command: "get",
-        content: JSON.stringify({
-            bots: tableData.bots,
-            state: gameState
-        })
-    }), 10000, function () {
-        if (this.status == 200) {
-            refreshData(JSON.parse(this.responseText));
-            setTimeout(updateData, 0);
+function subscribe() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "/lobby/data?state=" + gameState + "&bots=" +
+        tableData.bots.join(","), true);
+    xhr.onload = function () {
+        if (this.status != 200) {
+            alert(this.responseText);
         } else {
-            setTimeout(updateData, 10000);
+            let data = JSON.parse(this.responseText);
+            if (data.state != gameState) {
+                gameState = data.state;
+                setState(gameState);
+            }
+            let newBots = [];
+            let newRows = [];
+            tableData.bots.forEach(function (bot, i) {
+                if (data.bots.indexOf(bot) == -1) {
+                    Table.removeChild(tableData.rows[i].row);
+                } else {
+                    newBots.push(tableData.bots[i]);
+                    newRows.push(tableData.rows[i]);
+                }
+            });
+            data.bots.forEach(function (bot, i) {
+                if (newBots.indexOf(bot) == -1) {
+                    newBots.push(bot);
+                    newRows.push(addTableRow(bot));
+                }
+            });
+            tableData.bots = newBots;
+            tableData.rows = newRows;
         }
-    }, function () {
-        setTimeout(updateData, 0);
-    });
+        setTimeout(subscribe, 0);
+    }
+    xhr.ontimeout = function () {
+        setTimeout(subscribe, 0);
+    }
+    xhr.timeout = 30000;
+    if (requests.get) {
+        requests.get.abort();
+    }
+    xhr.send(null);
+    requests.get = xhr;
 }
 
-updateData();
+subscribe();
 
-function refreshData(data) {
-    if (data.state && data.state != gameState) {
-        if (gameState == "building" && data.state == "running") {
-            window.open("/game");
+function sendSource() {
+    let file = Source.files[0];
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/lobby/data?command=add", true);
+    let fdata = new FormData();
+    fdata.append("source", file);
+    xhr.onload = function () {
+        if (this.status != 200) {
+            alert(this.responseText);
+        } else {
+            subscribe()
         }
-        if (data.state == "error") {
-            alert("game process finished with an error");
-        }
-        gameState = data.state;
-        setState(gameState);
     }
-    if (data.bots === undefined) {
+    xhr.onerror = function () {
+        alert("Error connecting to server");
+    }
+    if (requests.send) {
+        requests.send.abort();
+    }
+    requests.send = xhr;
+    xhr.send(fdata);
+}
+
+function cleanSources() {
+    let bots = getSelected().join(",");
+    if (bots == "") {
         return;
     }
-    let tmpBots = [];
-    let tmpRows = [];
-    for (let i in tableData.bots) {
-        if (data.bots.indexOf(tableData.bots[i]) != -1) {
-            tmpBots.push(tableData.bots[i]);
-            tmpRows.push(tableData.rows[i])
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/lobby/data?command=remove&bots=" + bots, true);
+    xhr.onload = function () {
+        if (this.status != 200) {
+            alert(responseText);
         } else {
-            Table.removeChild(tableData.rows[i].row);
+            subscribe()
         }
     }
-    tableData.bots = tmpBots;
-    tableData.rows = tmpRows;
-    for (let i in data.bots) {
-        if (tableData.bots.indexOf(data.bots[i]) == -1) {
-            tableData.rows.push(addTableRow(data.bots[i]));
-            tableData.bots.push(data.bots[i]);
+    xhr.onerror = function () {
+        alert("Error connecting to server");
+    }
+    if (requests.clean) {
+        requests.clean.abort();
+    }
+    requests.clean = xhr;
+    xhr.send(null);
+}
+
+function startGame() {
+    let bots = getSelected().join(",");
+    let map = getMap();
+    let count = Count.value;
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "/lobby/data?command=startGame&map=" + map +
+        "&count=" + count + "&bots=" + bots, true);
+    xhr.onload = function () {
+        if (this.status != 200) {
+            alert(responseText);
+        } else {
+            subscribe()
         }
     }
+    xhr.onerror = function () {
+        alert("Error connecting to server");
+    }
+    if (requests.start) {
+        requests.start.abort();
+    }
+    requests.start = xhr;
+    xhr.send(null);
 }
 
 function setState(state) {
@@ -137,7 +200,8 @@ function setState(state) {
         GameLink.removeAttribute("hidden");
         GameMsg.setAttribute("hidden", "");
         StartButton.setAttribute("disabled", "");
-    } else if (state == "finished" || state == "idle") {
+    } else if (state == "finished" || state == "idle" ||
+        state == "error" || state == "build_error") {
         GameLink.setAttribute("hidden", "");
         GameMsg.setAttribute("hidden", "");
         StartButton.removeAttribute("disabled");
@@ -145,6 +209,12 @@ function setState(state) {
         GameLink.setAttribute("hidden", "");
         GameMsg.removeAttribute("hidden");
         StartButton.setAttribute("disabled", "");
+    }
+    if (state == "error") {
+        alert("Game finished with an error");
+    }
+    if(state == "build_error"){
+        alert("Build process finished with an error");
     }
 }
 
@@ -167,61 +237,10 @@ function addTableRow(name) {
     };
 }
 
-function sendXHR(id, method, url, data, timeout, onload, ontimeout, onerror) {
-    let xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-    xhr.timeout = +timeout;
-    xhr.onload = onload;
-    xhr.onerror = onerror;
-
-    xhr.ontimeout = ontimeout;
-
-    if (id in requests) {
-        requests[id].abort();
-    }
-    requests[id] = xhr;
-
-    xhr.send(data);
-}
-
-function sendSource() {
-    let fdata = createFormData({
-        command: "add",
-        source: Source.files[0]
-    });
-    sendXHR("postBots", "POST", "/bots", fdata, 0, alertIfNotOK);
-}
-
-function createFormData(data) {
-    let tmp = new FormData();
-    for (let i in data) {
-        tmp.append(i, data[i]);
-    }
-    return tmp;
-}
-
 function alertIfNotOK() {
     if (this.status != 200) {
         alert(this.responseText);
     }
-}
-
-function cleanSources() {
-    let bots = getSelected();
-    if (bots.length == tableData.bots.length || bots.length == 0) {
-        if (!confirm("WARNING: This will clear all bots on server.\nContinue?")) {
-            return;
-        } else {
-            bots = tableData.bots;
-        }
-    }
-    let fdata = createFormData({
-        command: "clean",
-        content: JSON.stringify(bots)
-    })
-    sendXHR("postBots", "POST", "/bots", fdata, 0, alertIfNotOK);
 }
 
 function getSelected() {
@@ -232,33 +251,6 @@ function getSelected() {
         }
     }
     return tmp;
-}
-
-function startGame() {
-    startAnim();
-    let bots = getSelected();
-    let fdata = createFormData({
-        command: "start",
-        content: JSON.stringify({
-            bots: bots,
-            count: Count.value,
-            map: getMap()
-        })
-    });
-    sendXHR("postBots", "POST", "/bots", fdata, 0, function () {
-        if (this.status != 200) {
-            alert(this.responseText);
-        }
-        stopAnim();
-    });
-}
-
-function startAnim() {
-    GameMsg.removeAttribute("hidden");
-}
-
-function stopAnim() {
-    GameMsg.setAttribute("hidden", "");
 }
 
 function getMap() {

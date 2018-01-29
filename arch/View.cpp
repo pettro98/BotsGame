@@ -105,10 +105,10 @@ void showCURL(const std::string &requestData){
 
 
     void View::show(const Map &newState, const Result &res) {
-        auto turn = MyGetData->current_turn();
+        auto current_turn = MyGetData->current_turn();
         auto data = convertMap(newState);
         auto stats = convertStats(res);
-        json full_Data({{"CT", turn},
+        json full_Data({{"CT", current_turn},
                         {"F",    data},
                         {"S",    stats}});
 
