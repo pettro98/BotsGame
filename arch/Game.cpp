@@ -339,10 +339,15 @@ namespace game_module
 		std::vector<Player *> result;
 		result.push_back(new BOT_0(red, "dev"));
         result.push_back(new BOT_1(green, "dev"));
+#if BOTS_COUNT > 2
         result.push_back(new BOT_2(cyan, "dev"));
+#elif BOTS_COUNT > 3
         result.push_back(new BOT_3(purple, "dev"));
-        result.push_back(new BOT_4(blue, "dev"));
-        result.push_back(new BOT_5(yellow, "dev"));
+#elif BOTS_COUNT > 4
+		result.push_back(new BOT_4(blue, "dev"));
+#elif BOTS_COUNT > 5
+		result.push_back(new BOT_5(yellow, "dev"));
+#endif
 		return result;
 	}
 

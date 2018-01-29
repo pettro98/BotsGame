@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.2)
+cmake_minimum_required(VERSION 3.0)
 
 set(HUNTER_ROOT)
 
@@ -10,14 +10,10 @@ HunterGate(
 )
 
 project(game)
-hunter_add_package(Boost)
-find_package(Boost CONFIG REQUIRED)
-hunter_add_package(Boost COMPONENTS system)
-find_package(Boost CONFIG REQUIRED system)
 hunter_add_package(CURL)
 find_package(CURL CONFIG REQUIRED)
-
-find_package(Threads)
+hunter_add_package(nlohmann_json)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 
 set(CMAKE_CXX_STANDARD 11)
@@ -51,7 +47,7 @@ set(SOURCE_FILES
 
 add_executable(game ${SOURCE_FILES})
 
-target_link_libraries(game Boost::boost Boost::system ${CMAKE_THREAD_LIBS_INIT} CURL::libcurl)
+target_link_libraries(game PUBLIC nlohmann_json CURL::libcurl)
 
 target_include_directories(game PUBLIC arch PUBLIC bot_sources)
 

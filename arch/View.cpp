@@ -2,12 +2,11 @@
 #include "Hex.h"
 #include "curl/curl.h"
 #include "nlohmann/json.hpp"
-#include <boost/asio.hpp>
+//#include <boost/asio.hpp>
 #include <vector>
 #include <iostream>
 #include <string>
 
-using namespace boost::asio;
 
 using nlohmann::json;
 
@@ -48,7 +47,7 @@ namespace game_module {
                         case unit_type::farm: //b
                             count += 1;
                         case unit_type::capital: //a
-                            content += 'a' + count;
+                            contents += 'a' + count;
                     }
                 }
                 row.push_back(json({{"O",            owner},
@@ -82,12 +81,11 @@ void showCURL(const std::string &requestData){
 
     curl = curl_easy_init();
     if(curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/data");
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:5000/game/data");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData.c_str());
         struct curl_slist *headers = NULL;
 
         headers = curl_slist_append(headers, "Content-Type: application/json");
-        headers = curl_slist_append(headers, "Expect:");
 
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 

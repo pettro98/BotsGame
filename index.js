@@ -25,7 +25,8 @@ const lobbyData = {
 };
 const gameData = {
     bots: [],
-    state: "idle"
+    state: "idle",
+    F: []
 };
 const logger = utils.logger;
 const lobbyPolls = {};
@@ -206,7 +207,7 @@ main.post("/lobby/data", (req, res) => {
 
 function createBuildFiles(logStream, res) {
     cp.spawn("cmake", ["-H.", "-B_build",
-        "-DCMAKE_INSTALL_PREFIX=_install", "-DCMAKE_BUILD_TYPE=Release"],
+        "-DCMAKE_INSTALL_PREFIX=_install"],
         {
             env: process.env
         }).on("close", (code) => {
@@ -337,7 +338,7 @@ main.post("/game/data", (req, res) => {
 
 logger("INFO: setting up main completed");
 
-main.listen((process.env.PORT || 80), "localhost", () => {
+main.listen((process.env.PORT || 5000), "localhost", () => {
     logger(`INFO: main is listening on port ${utils.PORT}`);
 });
 
