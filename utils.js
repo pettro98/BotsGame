@@ -2,7 +2,7 @@
 
 const utils = module.exports = {};
 
-const PORT = utils.PORT = process.env.PORT || 80;
+const PORT = utils.PORT = process.env.PORT || 5000;
 const PAGES = utils.PAGES = {
     lobby: __dirname + "/html/lobby.html",
     game: __dirname + "/html/game.html"

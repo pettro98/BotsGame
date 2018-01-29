@@ -338,7 +338,7 @@ main.post("/game/data", (req, res) => {
 
 logger("INFO: setting up main completed");
 
-main.listen((process.env.PORT || 5000), "localhost", () => {
+main.listen(utils.PORT, "localhost", () => {
     logger(`INFO: main is listening on port ${utils.PORT}`);
 });
 
