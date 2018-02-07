@@ -14,7 +14,7 @@ Forward.onclick = showNext;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-var gameState = "";
+var gameState = "running";
 var request = null;
 var showingTurn = 0;
 var lastTurn = 0;
@@ -24,7 +24,7 @@ var field = [];
 
 function sendReq(turn) {
     let xhr = new XMLHttpRequest();
-    xhr.open("GET", "/game?" + "lastTurn=" + lastTurn + "&gameState=" + gameState + "&turn=" + (turn || -1), true);
+    xhr.open("GET", "/game/data?" + "lastTurn=" + lastTurn + "&gameState=" + gameState + "&turn=" + (turn || -1), true);
     xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
     xhr.timeout = 3000;
@@ -63,30 +63,31 @@ function sendReq(turn) {
 
 function updateData(xhr) {
     let data = JSON.parse(xhr.responseText);
-    if (gameState == "running" && data.state == "finished") {
+    if (data.state == "finished") {
         Back.removeAttribute("disabled");
         Forward.removeAttribute("disabled");
     }
     if(data.state == "idle" || data.state == "building"){
-        alert("Someone started a new game or you wanted to open the tab without a game running. This tab will be closed");
+        alert("There is no game running now. This tab will be closed");
         window.close();
     }
     if(data.state == "error"){
-        alert("game process finished with an error. this tab will be closed");
+        alert("Game process finished with an error. This tab will be closed");
         window.close();
     }
-    gameState = data.state || gameState;
-    stat = data.stat || stat;
-    showingTurn = data.turn || data.lastTurn;
-    lastTurn = data.lastTurn || lastTurn;
-    field = data.field;
-    botFiles = botFiles || data.bots;
+    gameState = data.state || state;
+    stat = data.S || stat;
+    showingTurn = data.turn || showingTurn;
+    lastTurn = data.CT || lastTurn;
+    field = data.F;
+    botFiles = data.bots || botFiles;
 
     fillTable();
     Count.innerHTML = showingTurn;
     /////////////////////////////
 
-    myStage.sendMessage("gameData", field);
+    movie.sendMessage(field);
+    console.log(field);
 }
 
 sendReq();
@@ -131,13 +132,13 @@ function addTableRow() {
 function clearTable() {
     StatTable.innerHTML = "";
     statRowCount = 0;
-    addTableRow("Name", "points", "last turn", "armies", "farms", "towers", "moves");
+    addTableRow("Name", "last turn", "armies", "farms", "towers", "moves");
 }
 
 function fillTable() {
     clearTable();
     for (let i in botFiles) {
-        addTableRow(botFiles[i], stat.points[i], stat.last_turn[i],
-            stat.built_armies[i], stat.built_farms[i], stat.built_towers[i], stat.moves[i]);
+        addTableRow(botFiles[i], stat.LT[i],
+            stat.BA[i], stat.BF[i], stat.BT[i], stat.M[i]);
     }
 }

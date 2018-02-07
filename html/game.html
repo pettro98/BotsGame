@@ -5,82 +5,14 @@
     <meta charset="utf-8">
     <title>AntiyoyBots</title>
     <link rel="icon" href="/favicon.ico">
-    <script type="text/javascript" src="/scripts/bonsai.js"></script>
+    <script type="text/javascript" src="/scripts/graphics_lib.js"></script>
 </head>
 
 <body style="margin: 3vh;background: aquamarine;">
-    <div id="movie">
-        <script type="text/javascript">
-            var myStage = bonsai.run(document.getElementById('movie'), {
-                width: 500,
-                height: 400,
-                code: function () {
-                    const INIT_X = 100;
-                    const INIT_y = 100;
-
-                    const HEX_R = 30;
-                    const HEX_W = Math.sqrt(3) * HEX_R;
-                    const HEX_H = 2 * HEX_R;
-
-                    const HEX_VS = HEX_H / 2;
-                    const HEX_HS = HEX_W / 2;
-
-                    const FONT_S = HEX_R * 1.5;
-
-                    const colors = ["grey", "white",
-                        "lightpink", "lightgreen",
-                        "cyan", "magenta",
-                        "lightblue", "gold"];
-
-                    var oldGroup = new Group().addTo(stage);
-                    var newGroup = new Group();
-                    var gameData = {};
-
-                    function setChar(posx, posy, char, target) {
-                        new Text(char).attr({
-                            fontFamily: 'Arial, sans-serif',
-                            fontSize: fontS,
-                            x: posx - fontS / 3.6,
-                            y: posy - fontS / 1.7,
-                        }).addTo(target);
-                    }
-
-                    function setHex(i, j, color, cont, target) {
-                        let x = INIT_X + HEX_HS * i + HEX_HS * (i % 2);
-                        let y = INIT_Y + HEX_VS * j;
-                        new Polygon(x, y, HEX_R, 6).attr({
-                            strokeColor: "black",
-                            strokeWidth: 2
-                        }).fill(color).addTo(target);
-                        setChar(x, y, cont, target);
-                    }
-
-                    function drawField(data, target) {
-                        for (let j in data) {
-                            let row = data[j];
-                            for (let i in row) {
-                                setHex(i, j,
-                                    colors[row[i].owner],
-                                    row[i].contents, target);
-                            }
-                        }
-                    }
-
-                    function updateField(data) {
-                        drawField(data, newGroup);
-                        oldGroup.destroy();
-                        oldGroup = newGroup;
-                        newGroup = new Group();
-                    }
-
-                    stage.on("message:gameData", function (data) {
-                        gameData = data;
-                        updateField(data);
-                    });
-                }
-            });
-        </script>
+    <div id="panel" style="width:500px;height:400px">
     </div>
+    <script type="text/javascript" src="/scripts/graphics.js"></script>
+    </script>
     <div>
         <input id="back" type="button" value="<<" disabled="">
         <span>Showing turn #</span>

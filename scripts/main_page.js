@@ -200,6 +200,7 @@ function setState(state) {
         GameLink.removeAttribute("hidden");
         GameMsg.setAttribute("hidden", "");
         StartButton.setAttribute("disabled", "");
+        window.open("/game");
     } else if (state == "finished" || state == "idle" ||
         state == "error" || state == "build_error") {
         GameLink.setAttribute("hidden", "");

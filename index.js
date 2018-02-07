@@ -167,10 +167,11 @@ main.post("/lobby/data", (req, res) => {
             break;
         }
         case "startGame": {
-            let bots = gameData.bots = req.query.bots.split(",");
-            if (bots[0] === "") {
-                bots = [];
+            gameData.bots = req.query.bots.split(",");
+            if (gameData.bots[0] === "") {
+                gameData.bots = [];
             }
+            let bots = new Array(...gameData.bots);
             let map = req.query.map;
             let count = req.query.count;
             let header = "";
@@ -178,7 +179,7 @@ main.post("/lobby/data", (req, res) => {
             changeState("building");
             header += `#define BOTS_COUNT ${count}\n`;
             for (let i = 0; i < count; ++i) {
-                if (i < bots.length) {
+                if (i < gameData.bots.length) {
                     header += `#define BOT_${i} ${utils.cutExt(bots[i])}\n`;
                 } else {
                     header += `#define BOT_${i} game_module::Bot\n`;
@@ -283,15 +284,17 @@ main.get("/game", (req, res) => {
 });
 
 main.get("/game/data", (req, res) => {
-    let turn = res.query.turn;
-    let lastTurn = res.query.lastTurn;
-    let state = req.query.state;
+    let turn = req.query.turn;
+    let lastTurn = req.query.lastTurn;
+    let state = req.query.gameState;
     if (state != gameData.state) {
         res.status(200).json({
             F: gameData.F[gameData.F.length - 1],
             S: gameData.S,
             CT: gameData.CT,
-            state: gameData.state
+            state: gameData.state,
+            turn,
+            bots: gameData.bots
         });
         logger("INFO: immediately sent data because of state");
         return;
@@ -301,7 +304,8 @@ main.get("/game/data", (req, res) => {
             F: gameData.F[gameData.F.length - 1],
             S: gameData.S,
             CT: gameData.CT,
-            state: gameData.state
+            state: gameData.state,
+            bots: gameData.bots
         });
         logger("INFO: immediately sent data because of last turn number");
         return;
@@ -311,7 +315,9 @@ main.get("/game/data", (req, res) => {
             F: gameData.F[turn],
             S: gameData.S,
             CT: gameData.CT,
-            state: gameData.state
+            state: gameData.state,
+            turn,
+            bots: gameData.bots
         });
         logger("INFO: immediately sent data because of last turn number");
         return;
@@ -333,7 +339,7 @@ main.post("/game/data", (req, res) => {
     gameData.S = req.body.S;
     gameData.F.push(req.body.F);
     res.sendStatus(200);
-    respondAll(gamePolls, gameData);
+    respondAll(gamePolls, {...gameData, F: gameData.F[gameData.F.length - 1]});
 });
 
 logger("INFO: setting up main completed");

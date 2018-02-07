@@ -50,8 +50,7 @@ namespace game_module {
                             contents += 'a' + count;
                     }
                 }
-                row.push_back(json({{"O",            owner},
-                                    {"C", contents.c_str()}}));
+                row.push_back(contents + "_" + std::string() + static_cast<char>('0' + owner));
             }
             data.push_back(row);
         }
@@ -81,21 +80,23 @@ void showCURL(const std::string &requestData){
 
     curl = curl_easy_init();
     if(curl) {
+
         curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:5000/game/data");
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData.c_str());
+
         struct curl_slist *headers = NULL;
-
         headers = curl_slist_append(headers, "Content-Type: application/json");
-
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-        curl_slist_free_all(headers);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestData.c_str());
 
         res = curl_easy_perform(curl);
-        if(res != CURLE_OK)
+        if(res != CURLE_OK) {
             fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                    curl_easy_strerror(res));
+                             curl_easy_strerror(res));
+        }
 
+        curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
@@ -107,10 +108,13 @@ void showCURL(const std::string &requestData){
         auto data = convertMap(newState);
         auto stats = convertStats(res);
         json full_Data({{"CT", current_turn},
-                        {"F",    data},
+                      {"F",    data},
                         {"S",    stats}});
 
-        showCURL(full_Data.dump());
+  //      std::cout << full_Data.dump() << std::endl;
+
+       showCURL(full_Data.dump());
+//        std::cout << current_turn << std::endl;
 
 //        boost::system::error_code ec;
 //        io_service io;

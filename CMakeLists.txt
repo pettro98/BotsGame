@@ -5,8 +5,8 @@ set(HUNTER_ROOT)
 include("gate/cmake/HunterGate.cmake")
 
 HunterGate(
-        URL "https://github.com/ruslo/hunter/archive/v0.19.160.tar.gz"
-        SHA1 "8f27f3adb70e8b42de98183782c4b89c24ad8a76"
+		URL "https://github.com/ruslo/hunter/archive/v0.19.240.tar.gz"
+		SHA1 "aa3cd9c45391d8bd14441971b00a43c05d40347c"
 )
 
 project(game)
