@@ -86,8 +86,7 @@ function updateData(xhr) {
     Count.innerHTML = showingTurn;
     /////////////////////////////
 
-    movie.sendMessage(field);
-    console.log(field);
+    updateField(field);
 }
 
 sendReq();
