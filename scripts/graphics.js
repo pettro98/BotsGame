@@ -67,7 +67,7 @@ function updateField(field) {
     var i, j;
     newGroup = my_panel.createGroup();
     for (i in field) {
-        for (j in field) {
+        for (j in field[i]) {
             var par = field[i][j].split("_");
             var cont = par[0];
             var own = par[1];

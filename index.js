@@ -292,22 +292,22 @@ main.get("/game/data", (req, res) => {
         res.status(200).json({
             F: gameData.F[gameData.F.length - 1],
             S: gameData.S,
-            CT: gameData.CT,
+            CT: gameData.F.length - 1,
             state: gameData.state,
-            turn: (turn == -1) ? gameData.CT : turn,
+            turn: gameData.F.length - 1,
             bots: gameData.bots
         });
         logger("INFO: immediately sent data because of state");
         return;
     }
-    if (turn == -1 && lastTurn <= gameData.CT) {
+    if (turn == -1 && lastTurn < gameData.CT) {
         res.status(200).json({
             F: gameData.F[gameData.F.length - 1],
             S: gameData.S,
-            CT: gameData.CT,
+            CT: gameData.F.length - 1,
             state: gameData.state,
             bots: gameData.bots,
-            turn :gameData.CT
+            turn :gameData.F.length - 1
         });
         logger("INFO: immediately sent data because of last turn number");
         return;
@@ -316,7 +316,7 @@ main.get("/game/data", (req, res) => {
         res.status(200).json({
             F: gameData.F[turn],
             S: gameData.S,
-            CT: gameData.CT,
+            CT: gameData.F.length - 1,
             state: gameData.state,
             turn,
             bots: gameData.bots
@@ -342,7 +342,7 @@ main.post("/game/data", (req, res) => {
     gameData.F.push(req.body.F);
     res.sendStatus(200);
     respondAll(gamePolls, {...gameData, F: gameData.F[gameData.F.length - 1]});
-    proc.stderr
+    process.stderr.write(""+[req.body.CT, gameData.F.length] + "\n");
 });
 
 logger("INFO: setting up main completed");

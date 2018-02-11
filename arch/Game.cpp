@@ -412,13 +412,13 @@ namespace game_module
 			{
 				break;
 			}
+			this->turn_passed();
 			if (show_map)
 			{
-                std::this_thread::sleep_for(std::chrono::seconds(2));
+                std::this_thread::sleep_for(std::chrono::seconds(1));
 				GameView->show(*GameMap, Results);
 			}
 			this->double_trees();
-			this->turn_passed();
 		}
 		if (show_map)
 		{

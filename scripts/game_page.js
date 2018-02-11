@@ -24,7 +24,8 @@ var field = [];
 
 function sendReq(turn) {
     let xhr = new XMLHttpRequest();
-    xhr.open("GET", "/game/data?" + "lastTurn=" + lastTurn + "&gameState=" + gameState + "&turn=" + (turn || -1), true);
+    if(turn === undefined) turn = -1;
+    xhr.open("GET", "/game/data?" + "lastTurn=" + lastTurn + "&gameState=" + gameState + "&turn=" + turn , true);
     xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
     xhr.timeout = 3000;
