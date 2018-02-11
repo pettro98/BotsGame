@@ -53,3 +53,4 @@ node_modules/
 uploaded/*
 bot_sources/*
 *log*
+arch/dynamic.h

@@ -26,7 +26,7 @@ namespace game_module {
             json row = json::array();
             for (int j = 0; j < y; ++j) {
                 const auto hex = map(i, j);
-                const auto owner = hex->color() + 1;
+                const auto owner = hex->color();
                 const auto unit = hex->get_unit();
                 const auto type = hex->get_unit_type();
                 std::string contents;

@@ -263,6 +263,7 @@ function installGame(logStream, res) {
 }
 
 function execGame() {
+    gameData.F = [];
     cp.execFile("./_install/bin/game")
         .on("close", (code) => {
             if (!code) {
@@ -293,19 +294,20 @@ main.get("/game/data", (req, res) => {
             S: gameData.S,
             CT: gameData.CT,
             state: gameData.state,
-            turn,
+            turn: (turn == -1) ? gameData.CT : turn,
             bots: gameData.bots
         });
         logger("INFO: immediately sent data because of state");
         return;
     }
-    if (turn == -1 && lastTurn < gameData.CT) {
+    if (turn == -1 && lastTurn <= gameData.CT) {
         res.status(200).json({
             F: gameData.F[gameData.F.length - 1],
             S: gameData.S,
             CT: gameData.CT,
             state: gameData.state,
-            bots: gameData.bots
+            bots: gameData.bots,
+            turn :gameData.CT
         });
         logger("INFO: immediately sent data because of last turn number");
         return;
@@ -340,6 +342,7 @@ main.post("/game/data", (req, res) => {
     gameData.F.push(req.body.F);
     res.sendStatus(200);
     respondAll(gamePolls, {...gameData, F: gameData.F[gameData.F.length - 1]});
+    proc.stderr
 });
 
 logger("INFO: setting up main completed");
