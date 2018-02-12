@@ -180,6 +180,7 @@ main.post("/lobby/data", (req, res) => {
             header += `#define BOTS_COUNT ${count}\n`;
             for (let i = 0; i < count; ++i) {
                 if (i < gameData.bots.length) {
+                    header += `#include "${bots[i]}"\n`
                     header += `#define BOT_${i} ${utils.cutExt(bots[i])}\n`;
                 } else {
                     header += `#define BOT_${i} game_module::Bot\n`;
@@ -191,13 +192,13 @@ main.post("/lobby/data", (req, res) => {
             logger("INFO: wrote dynamic header");
             logger("INFO: build process started");
             bots.forEach((elem, index) => {
-                bots[index] = "arch/" + elem;
+                bots[index] = "bot_sources/" + elem;
             });
             if (fs.existsSync("./cmake_log.txt")) {
                 fs.unlinkSync("./cmake_log.txt");
             }
             let logStream = fs.createWriteStream("./cmake_log.txt", { flags: "a" });
-            process.env.BOT_SOURCES = bots.join(" ");
+            process.env.BOT_SOURCES = bots.join(";");
             createBuildFiles(logStream, res);
             break;
         }

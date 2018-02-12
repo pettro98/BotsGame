@@ -1,5 +1,6 @@
 #define BOTS_COUNT 6
-#define BOT_0 game_module::Bot
+#include "MyBot.h"
+#define BOT_0 MyBot
 #define BOT_1 game_module::Bot
 #define BOT_2 game_module::Bot
 #define BOT_3 game_module::Bot

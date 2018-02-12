@@ -18,6 +18,8 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(bots $ENV{BOT_SOURCES})
+
 set(SOURCE_FILES
 		arch/Bot.cpp
 		arch/Bot.h
@@ -42,7 +44,8 @@ set(SOURCE_FILES
         arch/Unit.h
         arch/View.h
         arch/View.cpp
-		$ENV{BOT_SOURCES})
+		${bots}
+        )
 
 
 add_executable(game ${SOURCE_FILES})
