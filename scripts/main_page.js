@@ -16,6 +16,7 @@ const Duel = document.getElementById("duel");
 const Classic = document.getElementById("classic");
 const Random = document.getElementById("random");
 const Count = document.getElementById("count");
+const Cooldown = document.getElementById("cooldown");
 
 const Table = document.getElementById("table");
 
@@ -175,9 +176,10 @@ function startGame() {
     let bots = getSelected().join(",");
     let map = getMap();
     let count = Count.value;
+    let cooldown = Cooldown.value;
     let xhr = new XMLHttpRequest();
     xhr.open("POST", "/lobby/data?command=startGame&map=" + map +
-        "&count=" + count + "&bots=" + bots, true);
+        "&count=" + count + "&bots=" + bots + "&cooldown=" + cooldown, true);
     xhr.onload = function () {
         if (this.status != 200) {
             alert(responseText);

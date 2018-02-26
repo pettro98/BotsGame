@@ -415,7 +415,7 @@ namespace game_module
 			this->turn_passed();
 			if (show_map)
 			{
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(COOLDOWN));
 				GameView->show(*GameMap, Results);
 			}
 			this->double_trees();

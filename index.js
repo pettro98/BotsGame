@@ -174,6 +174,7 @@ main.post("/lobby/data", (req, res) => {
             let bots = new Array(...gameData.bots);
             let map = req.query.map;
             let count = req.query.count;
+            let cooldown = req.query.cooldown;
             let header = "";
             res.sendStatus(200);
             changeState("building");
@@ -188,6 +189,7 @@ main.post("/lobby/data", (req, res) => {
                 }
             }
             header += `#define MAP_TYPE "${map}"\n`;
+            header += `#define COOLDOWN ${cooldown}\n`;
             fs.writeFileSync("./arch/dynamic.h", header);
             logger("INFO: wrote dynamic header");
             logger("INFO: build process started");

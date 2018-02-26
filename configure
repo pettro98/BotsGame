@@ -1,0 +1,68 @@
+#! /bin/bash
+
+function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+
+mkdir ./bot_sources
+mkdir ./uploaded
+
+sudo apt install git >&1
+
+apt show cmake | grep Version > $cmakever
+apt show node | grep Version > $nodever
+apt show npm | grep Version > $npmver
+
+$w_o_err = true
+
+if version_gt "Version: 3.5.1" $cmakever; then
+	rm -rf ./gitCmake
+	git clone https://github.com/pettro98/CMake.git ./gitCMake >&1
+	pushd ./gitCmake
+	./bootstrap --no-system-libs >&1
+	make && make install >&1
+	popd;
+
+else 
+	sudo apt install cmake >&1
+fi
+if [ 0 -ne $? ] ; then
+	$w_o_err = false
+fi
+
+if version_gt "Version: 9.5.0" $nodever; then
+	rm -rf ./gitNode
+	git clone https://github.com/pettro98/node.git ./gitNode >&1
+	pushd ./gitNode
+	./configure >&1
+	make && make install >&1
+	popd;
+else
+	sudo apt install node >&1
+fi
+if [ 0 -ne $? ] ; then
+	$w_o_err = false
+fi
+
+if version_gt "Version: 5.6.0" $npmver; then
+	rm -rf ./gitNpm
+	git clone https://github.com/pettro98/npm.git ./gitNpm >&1
+	pushd ./gitNpm
+	./configure >&1
+	make && make install >&1
+	popd;
+else
+	sudo apt install npm >&1
+fi
+if [ 0 -ne $? ] ; then
+	$w_o_err = false
+fi
+
+if $w_o_err; then
+	echo "Installed successfully. Now you can run ./launch to launch server!";
+	exit 0;
+else
+	echo "Errors occured while installing. Please fix the errors and re-run the script"
+	exit 1
+fi
+
+
+
