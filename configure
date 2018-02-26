@@ -56,6 +56,11 @@ if [ 0 -ne $? ] ; then
 	$w_o_err = false
 fi
 
+npm install
+if [ 0 -ne $? ] ; then
+	$w_o_err = false
+fi
+
 if $w_o_err; then
 	echo "Installed successfully. Now you can run ./launch to launch server!";
 	exit 0;
