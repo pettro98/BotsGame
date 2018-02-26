@@ -56,7 +56,7 @@ if [ 0 -ne $? ] ; then
 	$w_o_err = false
 fi
 
-npm install
+npm install >&1
 if [ 0 -ne $? ] ; then
 	$w_o_err = false
 fi
